@@ -1,0 +1,6 @@
+[package]
+name = "etrain"
+version = "0.1.0"
+authors = ["Ethan Hall <ethan@ehdev.io>"]
+
+[dependencies]
