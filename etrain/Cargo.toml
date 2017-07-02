@@ -3,4 +3,17 @@ name = "etrain"
 version = "0.1.0"
 authors = ["Ethan Hall <ethan@ehdev.io>"]
 
+[lib]
+name = "etrain"
+path = "src/etrain/lib.rs"
+
+[[bin]]
+name = "etrain"
+test = false
+doc = false
+
 [dependencies]
+clap = "2.25.0"
+slog = "2"
+slog-term = "2"
+slog-async = "2"
