@@ -7,11 +7,6 @@ authors = ["Ethan Hall <ethan@ehdev.io>"]
 name = "etrain"
 path = "src/etrain/lib.rs"
 
-[[bin]]
-name = "etrain"
-test = false
-doc = false
-
 [dependencies]
 clap = "2.25.0"
 slog = "2"
