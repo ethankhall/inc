@@ -8,10 +8,15 @@ use std::env::{self, current_exe};
 use etrain::initialization::{logging, log_level};
 use etrain::cli::CliResolver;
 use std::string::String;
-use std::process::{Command,self};
+use std::process::{Command, self};
 
 
 fn main() {
+    let exit_code = run();
+    process::exit(exit_code);
+}
+
+fn run() -> i32 {
     let log_level_int = get_verbosity_level();
     let logger = logging(log_level(log_level_int), "etrain");
 
@@ -22,13 +27,13 @@ fn main() {
 
     if requested_command.command == "help" {
         print_help(commands);
-        return;
+        return 0;
     }
 
     if commands.contains(&*requested_command.command) {
         println!("Unknown command `{}`", requested_command.command);
         print_help(commands);
-        process::exit(1);
+        return 1;
     }
 
     let mut child = Command::new(requested_command.command)
@@ -42,12 +47,10 @@ fn main() {
         .expect("failed to wait on child");
 
 
-    let exit_code = match exit_status.code() {
+    return match exit_status.code() {
         Some(code) => code,
-        None       => 1
+        None => 1
     };
-
-    process::exit(exit_code);
 }
 
 fn print_help(available_commands: HashSet<String>) {
@@ -62,7 +65,7 @@ fn print_help(available_commands: HashSet<String>) {
 
 fn build_path() -> String {
     let path = env::var("PATH").unwrap();
-    return path + ":" + current_exe().unwrap().as_path().parent().unwrap().to_str().unwrap()
+    return path + ":" + current_exe().unwrap().as_path().parent().unwrap().to_str().unwrap();
 }
 
 struct SubCommandArguments {

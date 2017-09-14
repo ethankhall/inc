@@ -77,7 +77,7 @@ impl CliResolver {
         let file_name: String = file_name.unwrap();
         let prefix = "etrain-";
 
-        debug!(self.logger, "element: {}", file_name);
+//        debug!(self.logger, "element: {}", file_name);
 
         if file_name.starts_with(&*prefix) {
             if self.file_is_executable(dir_entry) {

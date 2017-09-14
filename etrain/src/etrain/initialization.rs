@@ -8,7 +8,7 @@ use std::env;
 pub fn logging(min_level: Level, app_name: &str) -> Logger {
     let decorator = slog_term::TermDecorator::new().build();
     let drain = slog_term::FullFormat::new(decorator).build().fuse();
-    let drain = slog_async::Async::new(drain).build().fuse();
+    let drain = slog_async::Async::new(drain).chan_size(100000).build().fuse();
     let drain = LevelFilter::new(drain, min_level).fuse();
     return Logger::root(drain, slog_o!("app" => app_name.to_string()));
 }
