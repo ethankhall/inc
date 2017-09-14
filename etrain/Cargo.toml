@@ -8,7 +8,8 @@ name = "etrain"
 path = "src/etrain/lib.rs"
 
 [dependencies]
-clap = "2.25.0"
 slog = "2"
 slog-term = "2"
 slog-async = "2"
+yaml-rust = "0.3.5"
+regex = "0.2.2"
