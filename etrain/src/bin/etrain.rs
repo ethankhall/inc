@@ -5,10 +5,11 @@ extern crate etrain;
 use slog::Logger;
 use std::collections::{LinkedList, HashSet};
 use std::env::{self, current_exe};
-use etrain::initialization::{logging, log_level};
+use etrain::logging::{logging, get_verbosity_level};
 use etrain::cli::CliResolver;
 use std::string::String;
-use std::process::{Command, self};
+use std::process::{self, Command};
+use std::result::Result;
 
 
 fn main() {
@@ -17,63 +18,81 @@ fn main() {
 }
 
 fn run() -> i32 {
-    let log_level_int = get_verbosity_level();
-    let logger = logging(log_level(log_level_int), "etrain");
+    let log_level = get_verbosity_level();
+    let logger = logging(log_level, "etrain");
 
     let cli_resolver = CliResolver { logger: logger.new(slog_o!()) };
     let commands = cli_resolver.find_commands();
+    let requested_command = build_sub_command_args(logger.clone());
 
-    let requested_command = build_sub_command_args(logger);
+    slog_trace!(logger, "Found commands: {:?}", commands);
+    slog_trace!(logger, "Requested command: {:?}", requested_command);
 
-    if requested_command.command == "help" {
-        print_help(commands);
-        return 0;
-    }
-
-    if commands.contains(&*requested_command.command) {
-        println!("Unknown command `{}`", requested_command.command);
-        print_help(commands);
+    if let Err(value) = requested_command {
+        slog_warn!(logger, "{}", value);
+        print_help(logger, commands);
         return 1;
     }
 
-    let mut child = Command::new(requested_command.command)
+    let requested_command = requested_command.unwrap();
+
+    if requested_command.command == "help" {
+        print_help(logger, commands);
+        return 0;
+    }
+
+    if !commands.contains(&*requested_command.command) {
+        slog_warn!(logger, "Unknown command `{}`", requested_command.command);
+        print_help(logger, commands);
+        return 1;
+    }
+
+    let command_name = format!("etrain-{}", requested_command.command);
+    slog_trace!(logger, "Trying to execute {}", command_name);
+    let mut child = Command::new(command_name)
         .args(requested_command.arguments)
-        .env("ETRAIN_LOG_LEVEL", log_level_int.to_string())
+        .env("ETRAIN_LOG_LEVEL", log_level.as_str())
         .env("PATH", build_path())
         .spawn()
         .expect("failed to execute process");
 
-    let exit_status = child.wait()
-        .expect("failed to wait on child");
+    let exit_status = child.wait().expect("failed to wait on child");
 
 
     return match exit_status.code() {
         Some(code) => code,
-        None => 1
+        None => 1,
     };
 }
 
-fn print_help(available_commands: HashSet<String>) {
-    println!("usage: etrain [--verbose (-v)] <command> <args>");
-    println!();
-    println!("Available commands:");
+fn print_help(logger: Logger, available_commands: HashSet<String>) {
+    slog_info!(logger, "usage: etrain [--verbose (-v)] <command> <args>");
+    slog_info!(logger, "Available commands:");
 
     for command in available_commands {
-        println!("\t{}", command)
+        slog_info!(logger, "\t{}", command)
     }
 }
 
 fn build_path() -> String {
     let path = env::var("PATH").unwrap();
-    return path + ":" + current_exe().unwrap().as_path().parent().unwrap().to_str().unwrap();
+    return path + ":" +
+        current_exe()
+            .unwrap()
+            .as_path()
+            .parent()
+            .unwrap()
+            .to_str()
+            .unwrap();
 }
 
+#[derive(Debug)]
 struct SubCommandArguments {
     command: String,
-    arguments: LinkedList<String>
+    arguments: LinkedList<String>,
 }
 
-fn build_sub_command_args(logger: Logger) -> SubCommandArguments {
+fn build_sub_command_args(logger: Logger) -> Result<SubCommandArguments, &'static str> {
     let mut arguments: LinkedList<String> = LinkedList::new();
     let mut command: Option<String> = None;
 
@@ -96,30 +115,10 @@ fn build_sub_command_args(logger: Logger) -> SubCommandArguments {
     }
 
     return match command {
-        Some(p) => SubCommandArguments { command: p, arguments: arguments },
-        None => SubCommandArguments { command: String::from("help"), arguments: LinkedList::new() }
+        Some(p) => Ok(SubCommandArguments {
+            command: p,
+            arguments: arguments,
+        }),
+        None => Err("No command specified"),
     };
-}
-
-fn get_verbosity_level() -> u64 {
-    let mut verbose_level = 1;
-    for argument in env::args() {
-        if argument == "--verbose" {
-            verbose_level = verbose_level + 1;
-        }
-
-        if argument == "-v" {
-            verbose_level = verbose_level + 1;
-        }
-
-        if argument.starts_with("-v=") {
-            if let Some(count) = argument.get(3..) {
-                if let Ok(value) = count.parse() {
-                    verbose_level = value;
-                }
-            }
-        }
-    }
-
-    return verbose_level;
 }
