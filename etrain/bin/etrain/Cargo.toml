@@ -1,0 +1,8 @@
+[package]
+name = "etrain"
+version = "0.1.0"
+authors = ["Ethan Hall <ethan@ehdev.io>"]
+
+[dependencies]
+slog = { version = "2", features = ["max_level_trace", "release_max_level_trace"] }
+etrain-core = { version = "0.1.0", path = "../../lib/core" }

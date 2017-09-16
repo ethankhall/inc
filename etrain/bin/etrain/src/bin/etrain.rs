@@ -1,12 +1,12 @@
 #[macro_use]
 extern crate slog;
-extern crate etrain;
+extern crate etrain_core;
 
 use slog::Logger;
 use std::collections::{LinkedList, HashSet};
 use std::env::{self, current_exe};
-use etrain::logging::{logging, get_verbosity_level};
-use etrain::cli::CliResolver;
+use etrain_core::logging::{logging, get_verbosity_level};
+use etrain_core::cli::CliResolver;
 use std::string::String;
 use std::process::{self, Command};
 use std::result::Result;

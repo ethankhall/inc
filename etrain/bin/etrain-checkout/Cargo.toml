@@ -1,0 +1,13 @@
+[package]
+name = "etrain-checkout"
+version = "0.1.0"
+authors = ["Ethan Hall <ethan@ehdev.io>"]
+
+[lib]
+name = "checkout"
+path = "src/checkout/lib.rs"
+
+[dependencies]
+clap = "2.26.2"
+etrain-core = { version = "0.1.0", path = "../../lib/core" }
+slog = { version = "2", features = ["max_level_trace", "release_max_level_trace"] }

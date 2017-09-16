@@ -9,30 +9,14 @@ use std::env;
 use std::fmt::Debug;
 
 pub fn get_verbosity_level() -> Level {
-    let mut verbose_level = 1;
-    for argument in env::args().skip(1) {
-        if argument == "--verbose" {
-            verbose_level = verbose_level + 1;
-        }
+    let args_level = parse_from_args();
+    let env_level = parse_from_env();
 
-        if argument == "-v" {
-            verbose_level = verbose_level + 1;
-        }
-
-        if argument.starts_with("-v=") {
-            if let Some(count) = argument.get(3..) {
-                if let Ok(value) = count.parse() {
-                    verbose_level = value;
-                }
-            }
-        }
-
-        if !argument.starts_with("-") {
-            break;
-        }
+    if args_level.as_usize() > env_level.as_usize() {
+        return args_level;
+    } else {
+        return env_level;
     }
-
-    return log_level(verbose_level);
 }
 
 pub fn logging(min_level: Level, app_name: &str) -> Logger {
@@ -73,7 +57,34 @@ pub fn log_level(number_of_verbose: u64) -> Level {
     };
 }
 
-pub fn log_from_env() -> Level {
+fn parse_from_args() -> Level {
+    let mut verbose_level = 1;
+    for argument in env::args().skip(1) {
+        if argument == "--verbose" {
+            verbose_level = verbose_level + 1;
+        }
+
+        if argument == "-v" {
+            verbose_level = verbose_level + 1;
+        }
+
+        if argument.starts_with("-v=") {
+            if let Some(count) = argument.get(3..) {
+                if let Ok(value) = count.parse() {
+                    verbose_level = value;
+                }
+            }
+        }
+
+        if !argument.starts_with("-") {
+            break;
+        }
+    }
+
+    return log_level(verbose_level);
+}
+
+fn parse_from_env() -> Level {
     if let Ok(inherited_log_level) = env::var("ETRAIN_LOG_LEVEL") {
 
         return if Level::Critical.as_str() == inherited_log_level {

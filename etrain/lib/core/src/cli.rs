@@ -1,5 +1,4 @@
 extern crate slog;
-extern crate yaml_rust;
 
 use std::path::Path;
 use std::collections::HashSet;

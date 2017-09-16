@@ -1,0 +1,10 @@
+[package]
+name = "etrain-core"
+version = "0.1.0"
+authors = ["Ethan Hall <ethan@ehdev.io>"]
+
+[dependencies]
+slog = { version = "2", features = ["max_level_trace", "release_max_level_trace"] }
+slog-term = "2"
+slog-async = "2"
+regex = "0.2.2"
