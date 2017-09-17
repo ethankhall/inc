@@ -2,7 +2,6 @@ use slog::Logger;
 use scm::CheckoutError;
 use std::collections::LinkedList;
 use std::process::Command;
-use url::Url;
 
 #[derive(Debug)]
 pub struct GitCheckout {

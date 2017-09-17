@@ -1,8 +1,5 @@
-extern crate url;
-
 use git::GitCheckout;
 use slog::Logger;
-use url::{Url, ParseError};
 
 #[derive(Debug)]
 pub struct CheckoutError {

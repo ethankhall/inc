@@ -68,8 +68,16 @@ fn parse_from_args() -> Level {
             verbose_level = verbose_level + 1;
         }
 
+        if argument.starts_with("--verbose=") {
+            if let Some(count) = argument.get(("--verbose=".len())..) {
+                if let Ok(value) = count.parse() {
+                    verbose_level = value;
+                }
+            }
+        }
+
         if argument.starts_with("-v=") {
-            if let Some(count) = argument.get(3..) {
+            if let Some(count) = argument.get(("-v=".len())..) {
                 if let Ok(value) = count.parse() {
                     verbose_level = value;
                 }
