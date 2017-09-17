@@ -3,11 +3,14 @@ extern crate slog;
 extern crate clap;
 extern crate etrain_core;
 extern crate checkout;
+extern crate yaml_rust;
 
 use etrain_core::logging::{logging, get_verbosity_level};
 use clap::{App, Arg};
-use checkout::scm::create_scm_checkout;
+use checkout::scm::{do_scm_checkout, create_url};
 use std::process;
+use yaml_rust::{YamlLoader, YamlEmitter};
+use std::fs::File;
 
 fn main() {
     let exit_code = do_main();
@@ -16,6 +19,7 @@ fn main() {
 
 fn do_main() -> i32 {
     let logger = logging(get_verbosity_level(), "etrain-checkout");
+
 
     let matches = App::new("etrain checkout")
         .about("Checkout a project")
@@ -45,7 +49,13 @@ fn do_main() -> i32 {
 
     slog_debug!(logger, "Checking out {} from {}", source, service);
 
-    let result = create_scm_checkout(logger.clone(), service, source, destination);
+    let url = create_url(logger.clone(), service, source);
+    if let Err(e) = url {
+        slog_debug!(logger, "Error building URL: {:?}", e);
+        return 2;
+    }
+
+    let result = do_scm_checkout(logger.clone(), url.unwrap(), destination);
 
     slog_trace!(logger, "Results from checkout: {:?}", result);
 

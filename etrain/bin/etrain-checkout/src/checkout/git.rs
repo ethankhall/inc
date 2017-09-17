@@ -2,6 +2,7 @@ use slog::Logger;
 use scm::CheckoutError;
 use std::collections::LinkedList;
 use std::process::Command;
+use url::Url;
 
 #[derive(Debug)]
 pub struct GitCheckout {
@@ -20,7 +21,7 @@ impl GitCheckout {
 
         let mut args: LinkedList<String> = LinkedList::new();
         args.push_back(String::from("clone"));
-        args.push_back(self.url.clone());
+        args.push_back(self.url.as_str().to_string());
 
         if let Some(dest) = self.destination.clone() {
             args.push_back(dest);
@@ -36,7 +37,7 @@ impl GitCheckout {
 
         return match exit_status.code() {
             Some(code) => Ok(code),
-            None => Err( CheckoutError { error: "Unknown Error" })
+            None => Err( CheckoutError { error: String::from("Unknown Error") })
         };
     }
 }
