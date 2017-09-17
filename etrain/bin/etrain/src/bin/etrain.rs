@@ -58,7 +58,6 @@ fn run() -> i32 {
 
     let exit_status = child.wait().expect("failed to wait on child");
 
-
     return match exit_status.code() {
         Some(code) => code,
         None => 1,

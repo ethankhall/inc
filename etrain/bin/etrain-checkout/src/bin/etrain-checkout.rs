@@ -6,15 +6,15 @@ extern crate checkout;
 
 use etrain_core::logging::{logging, get_verbosity_level};
 use clap::{App, Arg};
-use checkout::scm::createScmCheckout;
+use checkout::scm::create_scm_checkout;
 use std::process;
 
 fn main() {
-    let exit_code = doMain();
+    let exit_code = do_main();
     process::exit(exit_code);
 }
 
-fn doMain() -> i32 {
+fn do_main() -> i32 {
     let logger = logging(get_verbosity_level(), "etrain-checkout");
 
     let matches = App::new("etrain checkout")
@@ -29,12 +29,10 @@ fn doMain() -> i32 {
         .arg(
             Arg::with_name("SOURCE")
                 .help("What to checkout")
-                .required(true)
-                .multiple(true),
+                .required(true),
         )
-        .arg(Arg::with_name("destination").short("d").help(
-            "Directory to checkout into",
-        ))
+        .arg(Arg::with_name("DEST")
+            .help("Directory to checkout into"))
         .arg(
             Arg::with_name("verbose")
                 .short("v")
@@ -44,16 +42,13 @@ fn doMain() -> i32 {
         .get_matches();
 
     let service = matches.value_of("service").unwrap_or_default();
+    let destination = matches.value_of("destination");
     let source = matches.value_of("SOURCE").unwrap();
 
     slog_debug!(logger, "Checking out {} from {}", source, service);
 
-    let result = createScmCheckout(
-        logger.clone(),
-        String::from(service),
-        String::from(source),
-        String::from("1"),
-    );
+    let result = create_scm_checkout(logger.clone(), service, source, destination);
+
     slog_trace!(logger, "Results from checkout: {:?}", result);
 
     return match result {
