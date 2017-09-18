@@ -8,10 +8,13 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::cell::Cell;
 
+#[derive(Debug, PartialEq)]
 pub enum ConfigValue {
     String(String),
     Array(Vec<ConfigValue>),
-    Number(f64),
+    Real(f64),
+    Integer(i64),
+    Boolean(bool),
     Null
 }
 
@@ -40,7 +43,6 @@ impl ConfigParser for ConfigContainer {
     }
 
     fn get(&self, path: String) -> Option<ConfigValue> {
-        
         return None;
     }
 
@@ -57,6 +59,7 @@ fn find_value(yaml: Yaml, path: String) -> Result<ConfigValue, String> {
     let mut seen_path: Vec<&str> = Vec::new();
 
     for key_part in split_path.iter() {
+        println!("{}", key_part);
         let hash = current_yaml.as_hash();
         if let None = hash {
             return Err(String::from("Yaml isn't a map"));
@@ -78,14 +81,36 @@ fn find_value(yaml: Yaml, path: String) -> Result<ConfigValue, String> {
     }
     let hash = hash.unwrap();
     let last_key_value = Yaml::String(String::from(last_key));
+    seen_path.push(last_key);
 
     if !hash.contains_key(&last_key_value) {
-        return Err(String::from(format!("Yaml doesn't contain key {}", last_key)));
+        return Err(String::from(format!("Yaml doesn't contain key {}", seen_path.join("."))));
     }
 
-    let value = hash.get(&last_key_value).unwrap();
+    return match pull_value(hash.get(&last_key_value).unwrap().clone()) {
+        Ok(value) => Ok(value),
+        Err(e) => Err(format!("Unable to parse {}: `{}`", seen_path.join("."), e))
+    };
+}
 
-    return Err(String::from("No key found"));
+fn pull_value(val: Yaml) -> Result<ConfigValue, &'static str> {
+    return match val {
+        Yaml::Real(value) => Ok(ConfigValue::Real(value.parse().unwrap())),
+        Yaml::Integer(value) => Ok(ConfigValue::Integer(value)),
+        Yaml::String(value) => Ok(ConfigValue::String(value)),
+        Yaml::Boolean(value) => Ok(ConfigValue::Boolean(value)),
+        Yaml::Array(value) => {
+            let arr = value.into_iter()
+                .map(|x| pull_value(x.clone()))
+                .filter(|x| x.is_ok())
+                .map(|x| x.unwrap())
+                .collect();
+            Ok(ConfigValue::Array(arr))
+        },
+        Yaml::Null => Ok(ConfigValue::Null),
+        Yaml::Hash(_) => Err("Unable pull value from Hash"),
+        _ => Err("Unable to parse type")
+    }
 }
 
 fn collapse_the_configs(config_files: Vec<PathBuf>) -> Vec<Yaml> {
@@ -103,6 +128,49 @@ fn collapse_the_configs(config_files: Vec<PathBuf>) -> Vec<Yaml> {
     }
 
     return return_configs;
+}
+
+#[test]
+fn test_get_values_from_config() {
+    let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    d.push("resources/test/sample-config1.yaml");
+
+    let parsed = parse_config_file(d);
+    if let None = parsed {
+        assert!(false, "Unable to parse config file");
+    }
+    let parsed = parsed.unwrap();
+
+    assert!(parsed.len() == 2);
+
+    let result = find_value(parsed.get(0).unwrap().clone(), String::from("checkout.default"));
+    match result {
+        Ok(value) => assert!(value == ConfigValue::String(String::from("crom"))),
+        Err(e) => assert!(false, format!("Unable to get checkout.default. Error was `{}`", e))
+    }
+
+    let result = find_value(parsed.get(0).unwrap().clone(), String::from("integer"));
+    match result {
+        Ok(value) => assert!(value == ConfigValue::Integer(1)),
+        Err(e) => assert!(false, format!("Unable to get integer. Error was `{}`", e))
+    }
+
+    let result = find_value(parsed.get(0).unwrap().clone(), String::from("array"));
+    match result {
+        Ok(value) => {
+            match value {
+                ConfigValue::Array(_) => {},
+                _ => assert!(false, "type was not array")
+            }
+        }
+        Err(e) => assert!(false, format!("Unable to get array. Error was `{}`", e))
+    }
+
+    let result = find_value(parsed.get(0).unwrap().clone(), String::from("null"));
+    match result {
+        Ok(value) => assert!(value == ConfigValue::Null),
+        Err(e) => assert!(false, format!("Unable to get null. Error was `{}`", e))
+    }
 }
 
 fn parse_config_file(path: PathBuf) -> Option<Vec<Yaml>> {
