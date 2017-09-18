@@ -1,12 +1,9 @@
-use std::collections::{HashMap, BTreeMap};
 use std::vec::Vec;
-use std::env::{current_dir, home_dir, set_current_dir};
+use std::env::{current_dir, home_dir};
 use std::path::PathBuf;
-use std::string;
 use yaml_rust::{Yaml, YamlLoader};
 use std::fs::File;
 use std::io::prelude::*;
-use std::cell::Cell;
 
 #[derive(Debug, PartialEq)]
 pub enum ConfigValue {
@@ -31,8 +28,8 @@ struct ConfigContainer {
 
 trait ConfigParser {
     fn new() -> Self;
-    fn get(&self, path: String) -> Option<ConfigValue>;
-    fn get_from_source(&self, path: String, source: ConfigSource) -> Option<ConfigValue>;
+    fn get(&self, path: String) -> Result<ConfigValue, String>;
+    fn get_from_source(&self, path: String, source: ConfigSource) -> Result<ConfigValue, String>;
 }
 
 impl ConfigParser for ConfigContainer {
@@ -42,13 +39,31 @@ impl ConfigParser for ConfigContainer {
         return ConfigContainer { project_config: project_config, home_config: home_configs };
     }
 
-    fn get(&self, path: String) -> Option<ConfigValue> {
-        return None;
+    fn get(&self, path: String) -> Result<ConfigValue, String> {
+        let result = self.get_from_source(path.clone(), ConfigSource::WorkingDir);
+        return match result {
+            Ok(val) => Ok(val),
+            Err(_) => self.get_from_source(path, ConfigSource::Home)
+        };
     }
 
-    fn get_from_source(&self, path: String, source: ConfigSource) -> Option<ConfigValue> {
-        return None;
+    fn get_from_source(&self, path: String, source: ConfigSource) -> Result<ConfigValue, String> {
+        return match source {
+            ConfigSource::WorkingDir => find_first_value(self.project_config.clone(), path),
+            ConfigSource::Home => find_first_value(self.home_config.clone(), path)
+        };
     }
+}
+
+fn find_first_value(yaml: Vec<Yaml>, path: String) -> Result<ConfigValue, String> {
+    for doc in yaml.into_iter() {
+        let result = find_value(doc, path.clone());
+        if result.is_ok() {
+            return result;
+        }
+    }
+
+    return Err(format!("Unable to find any entry for {}", path));
 }
 
 fn find_value(yaml: Yaml, path: String) -> Result<ConfigValue, String> {
@@ -130,49 +145,6 @@ fn collapse_the_configs(config_files: Vec<PathBuf>) -> Vec<Yaml> {
     return return_configs;
 }
 
-#[test]
-fn test_get_values_from_config() {
-    let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    d.push("resources/test/sample-config1.yaml");
-
-    let parsed = parse_config_file(d);
-    if let None = parsed {
-        assert!(false, "Unable to parse config file");
-    }
-    let parsed = parsed.unwrap();
-
-    assert!(parsed.len() == 2);
-
-    let result = find_value(parsed.get(0).unwrap().clone(), String::from("checkout.default"));
-    match result {
-        Ok(value) => assert!(value == ConfigValue::String(String::from("crom"))),
-        Err(e) => assert!(false, format!("Unable to get checkout.default. Error was `{}`", e))
-    }
-
-    let result = find_value(parsed.get(0).unwrap().clone(), String::from("integer"));
-    match result {
-        Ok(value) => assert!(value == ConfigValue::Integer(1)),
-        Err(e) => assert!(false, format!("Unable to get integer. Error was `{}`", e))
-    }
-
-    let result = find_value(parsed.get(0).unwrap().clone(), String::from("array"));
-    match result {
-        Ok(value) => {
-            match value {
-                ConfigValue::Array(_) => {},
-                _ => assert!(false, "type was not array")
-            }
-        }
-        Err(e) => assert!(false, format!("Unable to get array. Error was `{}`", e))
-    }
-
-    let result = find_value(parsed.get(0).unwrap().clone(), String::from("null"));
-    match result {
-        Ok(value) => assert!(value == ConfigValue::Null),
-        Err(e) => assert!(false, format!("Unable to get null. Error was `{}`", e))
-    }
-}
-
 fn parse_config_file(path: PathBuf) -> Option<Vec<Yaml>> {
     let mut file = File::open(path).expect("Unable to open the file");
     let mut contents = String::new();
@@ -199,15 +171,6 @@ fn config_file(prefix: &'static str, path: PathBuf) -> Option<PathBuf> {
     }
 
     return None;
-}
-
-#[test]
-fn test_config_file() {
-    let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    d.push("resources/test");
-
-    assert!(config_file("test1-", d.clone()).is_some());
-    assert!(config_file("test2-", d).is_some());
 }
 
 fn search_for_home_config() -> Vec<PathBuf> {
@@ -249,12 +212,72 @@ fn search_up_for_config_files() -> Vec<PathBuf> {
     return result;   
 }
 
-#[test]
-fn test_search_up_for_config_files() {
-    let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    d.push("resources/test/sub");
+#[cfg(test)]
+mod test {
+    use std::env::set_current_dir;
+    use std::path::PathBuf;
+    use super::*;
+    
+    #[test]
+    fn test_get_values_from_config() {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push("resources/test/sample-config1.yaml");
 
-    set_current_dir(&d);
+        let parsed = parse_config_file(d);
+        if let None = parsed {
+            assert!(false, "Unable to parse config file");
+        }
+        let parsed = parsed.unwrap();
 
-    assert_eq!(search_up_for_config_files().len(), 1);
+        assert!(parsed.len() == 2);
+
+        let result = find_value(parsed.get(0).unwrap().clone(), String::from("checkout.default"));
+        match result {
+            Ok(value) => assert!(value == ConfigValue::String(String::from("crom"))),
+            Err(e) => assert!(false, format!("Unable to get checkout.default. Error was `{}`", e))
+        }
+
+        let result = find_value(parsed.get(0).unwrap().clone(), String::from("integer"));
+        match result {
+            Ok(value) => assert!(value == ConfigValue::Integer(1)),
+            Err(e) => assert!(false, format!("Unable to get integer. Error was `{}`", e))
+        }
+
+        let result = find_value(parsed.get(0).unwrap().clone(), String::from("array"));
+        match result {
+            Ok(value) => {
+                match value {
+                    ConfigValue::Array(_) => {},
+                    _ => assert!(false, "type was not array")
+                }
+            }
+            Err(e) => assert!(false, format!("Unable to get array. Error was `{}`", e))
+        }
+
+        let result = find_value(parsed.get(0).unwrap().clone(), String::from("null"));
+        match result {
+            Ok(value) => assert!(value == ConfigValue::Null),
+            Err(e) => assert!(false, format!("Unable to get null. Error was `{}`", e))
+        }
+    }
+
+    #[test]
+    fn test_config_file() {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push("resources/test");
+
+        assert!(config_file("test1-", d.clone()).is_some());
+        assert!(config_file("test2-", d).is_some());
+    }
+
+    #[test]
+    #[allow(unused)]
+    fn test_search_up_for_config_files() {
+        let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        d.push("resources/test/sub");
+
+        set_current_dir(&d);
+
+        assert_eq!(search_up_for_config_files().len(), 1);
+    }
 }
