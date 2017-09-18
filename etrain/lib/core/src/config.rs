@@ -1,86 +1,140 @@
-use std::collections::{HashMap, BTreeMap, HashSet};
+use std::collections::{HashMap, BTreeMap};
+use std::vec::Vec;
 use std::env::{current_dir, home_dir};
 use std::path::PathBuf;
 use std::string;
 use yaml_rust::{Yaml, YamlLoader};
 use std::fs::File;
 use std::io::prelude::*;
+use std::cell::Cell;
 
-#[derive(Clone, PartialEq, PartialOrd, Debug, Eq, Ord)]
 pub enum ConfigValue {
-    /// float types are stored as String, and parsed on demand.
-    /// Note that f64 does NOT implement Eq trait and can NOT be stored in BTreeMap
-    Real(string::String),
-    /// Yaml int is stored as i64.
-    Integer(i64),
-    /// Yaml scalar.
-    String(string::String),
-    /// Yaml bool, e.g. `true` or `false`.
-    Boolean(bool),
-    /// Yaml array, can be access as a `Vec`.
+    String(String),
     Array(Vec<ConfigValue>),
-    /// Yaml bool, e.g. `null` or `~`.
+    Number(f64),
     Null
 }
 
+pub enum ConfigSource {
+    Home,
+    WorkingDir
+}
+
 #[derive(Debug)]
-pub struct ConfigResults {
-    project_config_map: BTreeMap<String, ConfigValue>,
-    home_config_map: BTreeMap<String, ConfigValue>
+struct ConfigContainer {
+    project_config: Vec<Yaml>,
+    home_config: Vec<Yaml>
 }
 
-pub fn find_configs() -> Result<ConfigResults, &'static str> {
-    let result: HashSet<PathBuf> = search_up_for_config_files();
-    
-    // if let Some(path) = home_dir() {
-    //     if let Some(config) = config_file(path) {
-    //         result.insert(config);
-    //     }
-    // }
-    return Ok(ConfigResults { project_config_map: BTreeMap::new(), home_config_map: BTreeMap::new() });
+trait ConfigParser {
+    fn new() -> Self;
+    fn get(&self, path: String) -> Option<ConfigValue>;
+    fn get_from_source(&self, path: String, source: ConfigSource) -> Option<ConfigValue>;
 }
 
-fn parse_config_file(path: PathBuf) -> BTreeMap<String, BTreeMap<String, String>> {
+impl ConfigParser for ConfigContainer {
+    fn new() -> Self {
+        let project_config: Vec<Yaml> = collapse_the_configs(search_up_for_config_files());
+        let home_configs: Vec<Yaml> = collapse_the_configs(search_for_home_config());
+        return ConfigContainer { project_config: project_config, home_config: home_configs };
+    }
+
+    fn get(&self, path: String) -> Option<ConfigValue> {
+        
+        return None;
+    }
+
+    fn get_from_source(&self, path: String, source: ConfigSource) -> Option<ConfigValue> {
+        return None;
+    }
+}
+
+fn find_value(yaml: Yaml, path: String) -> Result<ConfigValue, String> {
+    let mut current_yaml = &yaml;
+    let mut split_path: Vec<&str> = path.split(".").collect();
+    let last_key = split_path.pop().unwrap();
+
+    let mut seen_path: Vec<&str> = Vec::new();
+
+    for key_part in split_path.iter() {
+        let hash = current_yaml.as_hash();
+        if let None = hash {
+            return Err(String::from("Yaml isn't a map"));
+        }
+        let hash = hash.unwrap();
+
+        let next_yaml = hash.get(&Yaml::String(String::from(*key_part)));
+        if let None = next_yaml {
+            return Err(format!("No key `{}.{}` found", seen_path.join("."), key_part))
+        }
+
+        current_yaml = next_yaml.unwrap();
+        seen_path.push(key_part);
+    }
+
+    let hash = current_yaml.as_hash();
+    if let None = hash {
+        return Err(String::from("Yaml isn't a map"));
+    }
+    let hash = hash.unwrap();
+    let last_key_value = Yaml::String(String::from(last_key));
+
+    if !hash.contains_key(&last_key_value) {
+        return Err(String::from(format!("Yaml doesn't contain key {}", last_key)));
+    }
+
+    let value = hash.get(&last_key_value).unwrap();
+
+    return Err(String::from("No key found"));
+}
+
+fn collapse_the_configs(config_files: Vec<PathBuf>) -> Vec<Yaml> {
+    let mut return_configs: Vec<Yaml> = Vec::new();
+
+    for val in config_files {
+        match parse_config_file(val) {
+            Some(confs) => { 
+                for config in confs.into_iter() {
+                    return_configs.push(config);
+                }
+            },
+            _ => {}
+        }
+    }
+
+    return return_configs;
+}
+
+fn parse_config_file(path: PathBuf) -> Option<Vec<Yaml>> {
     let mut file = File::open(path).expect("Unable to open the file");
     let mut contents = String::new();
     file.read_to_string(&mut contents).expect("Unable to read the file");
-    let yaml = YamlLoader::load_from_str(&*contents);
-
-    let result_map = BTreeMap::new();
-
-    if let Err(_) = yaml {
-        return result_map;
-    }
-
-    for doc in yaml.unwrap().iter() {
-        if let Some(hash) = doc.as_hash() {
-            for (key, value) in hash {
-                println!("{:?}: \"{:?}\"", key, value);
-            }
-        } 
-    }
-    return result_map;
+    
+    return match YamlLoader::load_from_str(&*contents) {
+        Ok(yaml) => Some(yaml),
+        Err(_) => None
+    };
 }
 
-fn build_flat_map(prefix: String, map: BTreeMap<Yaml, Yaml>) -> BTreeMap<String, ConfigValue> {
-    let mut result_map = BTreeMap::new();
+// fn build_flat_map(prefix: String, map: BTreeMap<Yaml, Yaml>) -> BTreeMap<String, ConfigValue> {
+//     let mut result_map = BTreeMap::new();
 
-    for (key, value) in map {
-        let key = key.as_str().unwrap();
-        match value {
-            Yaml::Real(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Real(value)),
-            Yaml::Integer(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Integer(value)),
-            Yaml::String(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::String(value)),
-            Yaml::Boolean(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Boolean(value)),
-            Yaml::Array(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Array(value.to_vec())),
-            Yaml::Hash(value) => println!("foo"),
-            Yaml::Null => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Null),
-            _ => {}
-        };
-    }
+//     for (key, value) in map {
+//         let key = key.as_str().unwrap();
+//         match value {
+//             Yaml::Real(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Real(value)),
+//             Yaml::Integer(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Integer(value)),
+//             Yaml::String(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::String(value)),
+//             Yaml::Boolean(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Boolean(value)),
+//             Yaml::Array(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Array(value.to_vec())),
+//             Yaml::Hash(value) => println!("foo"),
+//             Yaml::Null => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Null),
+//             _ => {}
+//         };
+//     }
 
-    return result_map;
-}
+//     return result_map;
+// }
 
 fn config_file(prefix: &'static str, path: PathBuf) -> Option<PathBuf> {
     let config_search = path.join(format!("{}etrain.yaml", prefix));
@@ -96,14 +150,34 @@ fn config_file(prefix: &'static str, path: PathBuf) -> Option<PathBuf> {
     return None;
 }
 
-fn search_up_for_config_files() -> HashSet<PathBuf> {
-    let mut path = current_dir().unwrap();
-    let mut result: HashSet<PathBuf> = HashSet::new();
+fn search_for_home_config() -> Vec<PathBuf> {
+    let mut result: Vec<PathBuf> = Vec::new();
+
+    let config_file = match home_dir() {
+        Some(dir) => config_file(".", dir),
+        None => None
+    };
+
+    match config_file {
+        Some(path) => result.push(path),
+        _ => {}
+    }
+    
+    return result;
+}
+
+fn search_up_for_config_files() -> Vec<PathBuf> {
+    let current_dir = current_dir();
+    if let Err(_) = current_dir {
+        return Vec::new();
+    }
+    let mut path = current_dir.unwrap();
+    let mut result: Vec<PathBuf> = Vec::new();
     let mut at_root = false;
 
     while !at_root {
         if let Some(config) = config_file("", path.clone()) {
-            result.insert(config);
+            result.push(config);
         }
 
         match path.clone().parent() {
