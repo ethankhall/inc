@@ -1,6 +1,6 @@
 use std::collections::{HashMap, BTreeMap};
 use std::vec::Vec;
-use std::env::{current_dir, home_dir};
+use std::env::{current_dir, home_dir, set_current_dir};
 use std::path::PathBuf;
 use std::string;
 use yaml_rust::{Yaml, YamlLoader};
@@ -184,38 +184,30 @@ fn parse_config_file(path: PathBuf) -> Option<Vec<Yaml>> {
     };
 }
 
-// fn build_flat_map(prefix: String, map: BTreeMap<Yaml, Yaml>) -> BTreeMap<String, ConfigValue> {
-//     let mut result_map = BTreeMap::new();
-
-//     for (key, value) in map {
-//         let key = key.as_str().unwrap();
-//         match value {
-//             Yaml::Real(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Real(value)),
-//             Yaml::Integer(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Integer(value)),
-//             Yaml::String(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::String(value)),
-//             Yaml::Boolean(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Boolean(value)),
-//             Yaml::Array(value) => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Array(value.to_vec())),
-//             Yaml::Hash(value) => println!("foo"),
-//             Yaml::Null => result_map.insert(format!("{}.{}", prefix, key), ConfigValue::Null),
-//             _ => {}
-//         };
-//     }
-
-//     return result_map;
-// }
-
+/**
+  * Checks to see if either the yaml or yml file exists.
+  */
 fn config_file(prefix: &'static str, path: PathBuf) -> Option<PathBuf> {
     let config_search = path.join(format!("{}etrain.yaml", prefix));
     if config_search.exists() {
         return Some(config_search);
     }
 
-    let config_search = path.join(format!("{}etrain.yaml", prefix));
+    let config_search = path.join(format!("{}etrain.yml", prefix));
     if config_search.exists() {
         return Some(config_search);
     }
 
     return None;
+}
+
+#[test]
+fn test_config_file() {
+    let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    d.push("resources/test");
+
+    assert!(config_file("test1-", d.clone()).is_some());
+    assert!(config_file("test2-", d).is_some());
 }
 
 fn search_for_home_config() -> Vec<PathBuf> {
@@ -255,4 +247,14 @@ fn search_up_for_config_files() -> Vec<PathBuf> {
     }
 
     return result;   
+}
+
+#[test]
+fn test_search_up_for_config_files() {
+    let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    d.push("resources/test/sub");
+
+    set_current_dir(&d);
+
+    assert_eq!(search_up_for_config_files().len(), 1);
 }
