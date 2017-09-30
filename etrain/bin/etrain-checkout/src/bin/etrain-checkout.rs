@@ -25,13 +25,12 @@ fn do_main() -> i32 {
                 .long("service")
                 .help("Where to checkout from. A lot of cases will be github")
                 .default_value("github")
-                .possible_value("github"))
-        .arg(
-            Arg::with_name("SOURCE")
-                .help("What to checkout")
-                .required(true))
-        .arg(Arg::with_name("DEST")
-            .help("Directory to checkout into"))
+                .possible_value("github"),
+        )
+        .arg(Arg::with_name("SOURCE").help("What to checkout").required(
+            true,
+        ))
+        .arg(Arg::with_name("DEST").help("Directory to checkout into"))
         .arg(
             Arg::with_name("verbose")
                 .short("v")

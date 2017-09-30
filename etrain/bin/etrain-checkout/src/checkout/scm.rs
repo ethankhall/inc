@@ -18,7 +18,11 @@ pub fn create_url(logger: Logger, service: &str, repo: &str) -> Result<String, C
     };
 }
 
-pub fn do_scm_checkout(logger: Logger, url: String, destination: Option<&str>) -> Result<i32, CheckoutError> {
+pub fn do_scm_checkout(
+    logger: Logger,
+    url: String,
+    destination: Option<&str>,
+) -> Result<i32, CheckoutError> {
     slog_trace!(logger, "URL to clone: {}", url);
     if let Some(git_checkout) = get_git_checkout(logger, url) {
         return git_checkout.do_checkout(Path::new("/"));
