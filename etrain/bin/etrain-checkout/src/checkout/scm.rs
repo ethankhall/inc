@@ -1,10 +1,13 @@
-use git::GitCheckout;
 use slog::Logger;
+use std::path::Path;
+use git::get_git_checkout;
 
 #[derive(Debug)]
 pub struct CheckoutError {
     pub error: String,
 }
+
+pub type ScmUrl = String;
 
 pub fn create_url(logger: Logger, service: &str, repo: &str) -> Result<String, CheckoutError> {
     let service = service.to_lowercase();
@@ -17,9 +20,9 @@ pub fn create_url(logger: Logger, service: &str, repo: &str) -> Result<String, C
 
 pub fn do_scm_checkout(logger: Logger, url: String, destination: Option<&str>) -> Result<i32, CheckoutError> {
     slog_trace!(logger, "URL to clone: {}", url);
-    return if url.starts_with("git://") || url.starts_with("git@") {
-        GitCheckout::new(logger, url, destination).do_checkout()
-    } else {
-        Err(CheckoutError { error: String::from("Unknown url!") })
+    if let Some(git_checkout) = get_git_checkout(logger, url) {
+        return git_checkout.do_checkout(Path::new("/"));
     }
+
+    return Ok(1);
 }
