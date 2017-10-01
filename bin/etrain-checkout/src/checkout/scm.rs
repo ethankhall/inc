@@ -42,19 +42,25 @@ fn compute_destination(logger: Logger, url: ScmUrl, destination: Option<&str>) -
         return PathBuf::from(destination);
     }
 
-    let parsed_url = Url::parse(url.as_str().clone());
+    let sanitized_url = if url.ends_with("/") || url.ends_with("\\") {
+        String::from(&(url[..(url.len() - 1)]))
+    } else {
+        url
+    };
+
+    let parsed_url = Url::parse(sanitized_url.as_str().clone());
     if let Ok(unwrapped_url) = parsed_url {
         return extract_directory(unwrapped_url.path());
     }
 
-    let mut split_url: Vec<&str> = url.split("/").collect();
-    if split_url.len() > 1 {
-        return extract_directory(split_url.pop().unwrap());
+    let index = sanitized_url.as_str().rfind("/");
+    if let Some(index) = index {
+        return extract_directory(&(sanitized_url[(index)..]));
     }
 
-    let mut split_url: Vec<&str> = url.split("\\").collect();
-    if split_url.len() > 1 {
-        return extract_directory(split_url.pop().unwrap());
+    let index = sanitized_url.as_str().rfind("\\");
+    if let Some(index) = index {
+        return extract_directory(&(sanitized_url[(index)..]));
     }
     
     let project_name = Generator::default().next().unwrap();
@@ -89,6 +95,7 @@ mod test {
                     let expected = PathBuf::from("repo");
                     let root = Logger::root(Discard, o!());
                     let url = ScmUrl::from(*arg);
+                    // println!("test string: {}", String::from(*arg));
                     let dest = compute_destination(root, url.clone(), None);
                     let file_name = dest.file_name();
                     assert!(file_name.is_some(), "url didn't get parsed: {}", url.clone());
