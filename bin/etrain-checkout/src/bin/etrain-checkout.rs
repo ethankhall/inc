@@ -27,10 +27,10 @@ fn do_main() -> i32 {
                 .default_value("github")
                 .possible_value("github"),
         )
-        .arg(Arg::with_name("SOURCE").help("What to checkout").required(
+        .arg(Arg::with_name("repository").help("The (possibly remote) repository to clone from.").required(
             true,
         ))
-        .arg(Arg::with_name("DEST").help("Directory to checkout into"))
+        .arg(Arg::with_name("directory").help("Clones a repository into a newly created directory."))
         .arg(
             Arg::with_name("verbose")
                 .short("v")
@@ -42,11 +42,11 @@ fn do_main() -> i32 {
 
     let service = matches.value_of("service").unwrap_or_default();
     let destination = matches.value_of("destination");
-    let source = matches.value_of("SOURCE").unwrap();
+    let repository = matches.value_of("repository").unwrap();
 
-    slog_debug!(logger, "Checking out {} from {}", source, service);
+    slog_debug!(logger, "Checking out {} from {}", repository, service);
 
-    let url = create_url(logger.clone(), service, source);
+    let url = create_url(logger.clone(), service, repository);
     if let Err(e) = url {
         slog_debug!(logger, "Error building URL: {:?}", e);
         return 2;
