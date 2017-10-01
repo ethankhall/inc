@@ -41,10 +41,10 @@ fn do_main() -> i32 {
         .get_matches();
 
     let service = matches.value_of("service").unwrap_or_default();
-    let destination = matches.value_of("destination");
+    let destination = matches.value_of("directory");
     let repository = matches.value_of("repository").unwrap();
 
-    slog_debug!(logger, "Checking out {} from {}", repository, service);
+    slog_debug!(logger, "Checking out {} from {} into {:?}", repository, service, destination);
 
     let url = create_url(logger.clone(), service, repository);
     if let Err(e) = url {

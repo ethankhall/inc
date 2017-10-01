@@ -29,6 +29,7 @@ pub fn do_scm_checkout(
     slog_trace!(logger, "URL to clone: {}", url);
 
     let checkout_dir = compute_destination(logger.clone(), url.clone(), destination);
+    slog_trace!(logger, "Checkout dir: {:?}", checkout_dir);
 
     if let Some(git_checkout) = get_git_checkout(logger, url) {
         return git_checkout.do_checkout(checkout_dir.as_path());
