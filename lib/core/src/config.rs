@@ -21,12 +21,12 @@ pub enum ConfigSource {
 }
 
 #[derive(Debug)]
-struct ConfigContainer {
+pub struct ConfigContainer {
     project_config: Vec<Yaml>,
     home_config: Vec<Yaml>
 }
 
-trait ConfigParser {
+pub trait ConfigParser {
     fn new() -> Self;
     fn get(&self, path: String) -> Result<ConfigValue, String>;
     fn get_from_source(&self, path: String, source: ConfigSource) -> Result<ConfigValue, String>;
