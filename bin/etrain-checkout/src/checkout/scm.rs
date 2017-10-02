@@ -12,7 +12,7 @@ pub struct CheckoutError {
 
 pub type ScmUrl = String;
 
-pub fn create_url(logger: Logger, service: &str, repo: &str) -> Result<String, CheckoutError> {
+pub fn create_url(logger: Logger, service: String, repo: String) -> Result<String, CheckoutError> {
     slog_debug!(logger, "Origonal input: {}", service);
     let service = service.to_lowercase();
     return if service == "github" {
@@ -25,7 +25,7 @@ pub fn create_url(logger: Logger, service: &str, repo: &str) -> Result<String, C
 pub fn do_scm_checkout(
     logger: Logger,
     url: String,
-    destination: Option<&str>) -> Result<i32, CheckoutError> {
+    destination: Option<String>) -> Result<i32, CheckoutError> {
     slog_trace!(logger, "URL to clone: {}", url);
 
     let checkout_dir = compute_destination(logger.clone(), url.clone(), destination);
@@ -37,7 +37,7 @@ pub fn do_scm_checkout(
     return Ok(1);
 }
 
-fn compute_destination(logger: Logger, url: ScmUrl, destination: Option<&str>) -> PathBuf {
+fn compute_destination(logger: Logger, url: ScmUrl, destination: Option<String>) -> PathBuf {
     if destination.is_some() {
         let destination = destination.unwrap();
         return PathBuf::from(destination);

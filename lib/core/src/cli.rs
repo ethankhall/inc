@@ -5,14 +5,16 @@ use std::collections::HashSet;
 use std::env::{self, current_exe};
 use std::fs::{self, DirEntry, ReadDir};
 use slog::Logger;
+use BASE_APPLICATION_NAME;
 
 pub struct CliResolver {
     pub logger: Logger,
+    pub prefix: String
 }
 
 impl CliResolver {
     pub fn find_command(&self, command_name: String) -> Option<String> {
-        let prefix_command = &*format!("etrain-{}", command_name);
+        let prefix_command = &*format!("{}-{}", self.prefix, command_name);
         let commands = self.find_commands();
         let commands = commands
             .iter()
@@ -34,7 +36,8 @@ impl CliResolver {
             for split_path in path.split(":") {
                 debug!(
                     self.logger,
-                    "Processing {} for erail executables",
+                    "Processing {} for {} executables",
+                    BASE_APPLICATION_NAME,
                     split_path
                 );
                 for entry in fs::read_dir(split_path) {
@@ -47,7 +50,7 @@ impl CliResolver {
             let mut path = path.canonicalize().unwrap();
             path.pop();
             let path = path.as_path();
-            debug!(self.logger, "Processing {:?} for erail executables", path);
+            debug!(self.logger, "Processing {:?} for {:?} executables", BASE_APPLICATION_NAME, path);
             for entry in path.read_dir() {
                 self.process_dir_read(&mut sub_commands, entry);
             }
@@ -80,7 +83,7 @@ impl CliResolver {
 
         // let path = dir_entry.path();
         let file_name: String = file_name.unwrap();
-        let prefix = "etrain-";
+        let prefix = format!("{}-", self.prefix);
 
         if file_name.starts_with(&*prefix) {
             if self.file_is_executable(dir_entry) {

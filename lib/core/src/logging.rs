@@ -19,7 +19,7 @@ pub fn get_verbosity_level() -> Level {
     }
 }
 
-pub fn logging(min_level: Level, app_name: &str) -> Logger {
+pub fn logging(min_level: Level, app_name: String) -> Logger {
     let decorator = TermDecorator::new().stdout().build();
     let logger = if min_level == Level::Debug || min_level == Level::Trace {
         let format = FullFormat::new(decorator);

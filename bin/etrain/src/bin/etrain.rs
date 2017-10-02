@@ -7,6 +7,7 @@ use std::collections::{LinkedList, HashSet};
 use std::env::{self, current_exe};
 use etrain_core::logging::{logging, get_verbosity_level};
 use etrain_core::cli::CliResolver;
+use etrain_core::BASE_APPLICATION_NAME;
 use std::string::String;
 use std::process::{self, Command};
 use std::result::Result;
@@ -19,9 +20,9 @@ fn main() {
 
 fn run() -> i32 {
     let log_level = get_verbosity_level();
-    let logger = logging(log_level, "etrain");
+    let logger = logging(log_level, String::from(BASE_APPLICATION_NAME));
 
-    let cli_resolver = CliResolver { logger: logger.new(slog_o!()) };
+    let cli_resolver = CliResolver { logger: logger.new(slog_o!()), prefix: String::from(BASE_APPLICATION_NAME) };
     let commands = cli_resolver.find_commands();
     let requested_command = build_sub_command_args(logger.clone());
 
