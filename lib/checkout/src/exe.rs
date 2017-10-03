@@ -1,11 +1,6 @@
-use scm;
-use slog::Logger;
-use etrain_core::command::MainCommand;
-use etrain_core::logging::{logging, get_verbosity_level};
-use etrain_core::config::{ConfigParser, ConfigContainer, ConfigSource, ConfigValue};
+use etrain_core::command::{MainCommand, CommandContainer, LoggingContainer};
+use etrain_core::config::{ConfigContainer, ConfigSource};
 use scm::core::{do_scm_checkout, create_url};
-use std::process;
-use etrain_core::cli::CliResolver;
 use etrain_core::BASE_APPLICATION_NAME;
 use std::collections::HashSet;
 use docopt::Docopt;
@@ -65,10 +60,17 @@ pub fn build_checkout_command() -> impl MainCommand {
 struct CheckoutCommand {}
 
 impl MainCommand for CheckoutCommand {
-    fn execute(&self, args: Vec<String>, logger: &Logger, config_container: &ConfigContainer, sub_commands: Vec<String>) -> i32 {
+    fn execute(&self, args: Vec<String>, logging_container: &LoggingContainer, config_container: &ConfigContainer, 
+        command_container: &CommandContainer) -> i32 {
+        
+        let logger = logging_container.logger;
+
+        let sub_commands = command_container.find_sub_commands(self.get_command_prefix());
+
         let service_options = possible_checkout_sources(sub_commands);
         let default_sources = config_container.get_from_source_default(String::from("checkout.default"), ConfigSource::Home, String::from(DEFAULT_CHECKOUT_SOURCE));
         let doc_opts: Args = Docopt::new(build_usage(default_sources, service_options))
+            .and_then(|d| d.argv(args.into_iter()).parse())
             .and_then(|d| d.deserialize())
             .unwrap_or_else(|e| e.exit());
 

@@ -13,5 +13,5 @@ extern crate docopt;
 const DEFAULT_CHECKOUT_SOURCE: &'static str = "github";
 const PRE_DEFINED_CHECKOUT_SOURCES: &'static [&'static str] = &["github"];
 
-pub mod command;
+pub mod exe;
 mod scm;
