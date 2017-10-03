@@ -9,6 +9,7 @@ pub struct SubCommandLocation {
 
 pub trait MainCommand {
     fn execute(&self, args: Vec<String>, logger: &Logger, config_container: &ConfigContainer, sub_commands: Vec<String>) -> i32;
-    fn name(&self) -> String;
-    fn description(&self) -> String;
+    fn get_command_name(&self) -> String;
+    fn get_command_prefix(&self) -> String;
+    fn get_description(&self) -> String;
 }

@@ -20,9 +20,9 @@ fn main() {
 fn do_main() -> i32 {
     let command = build_checkout_command();
 
-    let name = command.name();
+    let name = command.get_command_name();
     let logger = logging(get_verbosity_level(), &name);
-    let cli_resolver = CliResolver { logger: logger.clone(), prefix: format!("{}-{}", BASE_APPLICATION_NAME, name)};
+    let cli_resolver = CliResolver { logger: logger.clone(), prefix: command.get_command_prefix()};
     let commands = cli_resolver.find_commands();
     let config_container = ConfigContainer::new();
 

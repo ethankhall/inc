@@ -94,11 +94,15 @@ impl MainCommand for CheckoutCommand {
         };
     }
 
-    fn name(&self) -> String {
+    fn get_command_name(&self) -> String {
         return String::from("checkout");
     }
 
-    fn description(&self) -> String {
+    fn get_command_prefix(&self) -> String {
+        return format!("{}-{}", BASE_APPLICATION_NAME, self.get_command_name());
+    }
+
+    fn get_description(&self) -> String {
         return String::from("Checkout a repo from source control");
     }
 }
