@@ -30,6 +30,7 @@ pub trait ConfigParser {
     fn new() -> Self;
     fn get(&self, path: String) -> Result<ConfigValue, String>;
     fn get_from_source(&self, path: String, source: ConfigSource) -> Result<ConfigValue, String>;
+    fn get_from_source_default(&self, path: String, source: ConfigSource, default: String) -> String;
 }
 
 impl ConfigParser for ConfigContainer {
@@ -37,6 +38,16 @@ impl ConfigParser for ConfigContainer {
         let project_config: Vec<Yaml> = collapse_the_configs(search_up_for_config_files());
         let home_configs: Vec<Yaml> = collapse_the_configs(search_for_home_config());
         return ConfigContainer { project_config: project_config, home_config: home_configs };
+    }
+
+    fn get_from_source_default(&self, path: String, source: ConfigSource, default: String) -> String {
+        let result = self.get_from_source(path, source);
+        let result = result.unwrap_or_else(|_| { return ConfigValue::String(default.clone())});
+
+        return match result {
+            ConfigValue::String(value) => value,
+            _ => default
+        };
     }
 
     fn get(&self, path: String) -> Result<ConfigValue, String> {

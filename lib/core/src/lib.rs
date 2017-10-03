@@ -7,5 +7,7 @@ extern crate yaml_rust;
 pub mod logging;
 pub mod cli;
 pub mod config;
+pub mod command;
+pub mod main;
 
 pub const BASE_APPLICATION_NAME: &'static str = "etrain";

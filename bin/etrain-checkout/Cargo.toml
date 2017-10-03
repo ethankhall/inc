@@ -3,16 +3,7 @@ name = "etrain-checkout"
 version = "0.1.0"
 authors = ["Ethan Hall <ethan@ehdev.io>"]
 
-[lib]
-name = "checkout"
-path = "src/checkout/lib.rs"
-
 [dependencies]
-docopt = "0.8.1"
-serde = "1.0" # if you're using `derive(Deserialize)`
-serde_derive = "1.0" # if you're using `derive(Deserialize)`
-regex = "0.2"
-url = "1.5.1"
-names = "0.11.0"
 etrain-core = { version = "0.1.0", path = "../../lib/core" }
+etrain-checkout-lib = { version = "0.1.0", path = "../../lib/checkout" }
 slog = { version = "2", features = ["max_level_trace", "release_max_level_trace"] }

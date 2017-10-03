@@ -1,2 +1,2 @@
 [workspace]
-members = ["lib/core", "bin/etrain", "bin/etrain-checkout"]
+members = ["lib/core", "lib/checkout", "bin/etrain", "bin/etrain-checkout"]

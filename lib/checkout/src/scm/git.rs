@@ -1,9 +1,8 @@
 use slog::Logger;
-use scm::CheckoutError;
 use std::collections::LinkedList;
 use std::process::Command;
 use std::path::Path;
-use scm::ScmUrl;
+use scm::scm::{ScmUrl, CheckoutError};
 use regex::RegexSet;
 
 #[derive(Debug)]
@@ -25,20 +24,20 @@ pub mod test {
     use super::*;
 
     pub const SSH_URL_ARRAY: &'static [&'static str] = &[
-            "ssh://host.xz/path/to/repo.git/",
-            "ssh://host.xz/path/to/repo.git",
-            "ssh://ethall@host.xz/path/to/repo.git/",
-            "ssh://ethall@host.xz/path/to/repo.git",
-            "ssh://host.xz:111/path/to/repo.git/",
-            "ssh://host.xz:111/path/to/repo.git",
-            "ssh://ethall@host.xz:111/path/to/repo.git/",
-            "ssh://ethall@host.xz:111/path/to/repo.git",
-            "ssh://host.xz/~ethall/path/to/repo.git/",
-            "ssh://host.xz/~ethall/path/to/repo.git",
-            "ssh://ethall@host.xz/~ethall/path/to/repo.git/",
-            "ssh://ethall@host.xz/~ethall/path/to/repo.git",
-            "ssh://ethall@host.xz:111/~ethall/path/to/repo.git/",
-            "ssh://ethall@host.xz:111/~ethall/path/to/repo.git"];
+        "ssh://host.xz/path/to/repo.git/",
+        "ssh://host.xz/path/to/repo.git",
+        "ssh://ethall@host.xz/path/to/repo.git/",
+        "ssh://ethall@host.xz/path/to/repo.git",
+        "ssh://host.xz:111/path/to/repo.git/",
+        "ssh://host.xz:111/path/to/repo.git",
+        "ssh://ethall@host.xz:111/path/to/repo.git/",
+        "ssh://ethall@host.xz:111/path/to/repo.git",
+        "ssh://host.xz/~ethall/path/to/repo.git/",
+        "ssh://host.xz/~ethall/path/to/repo.git",
+        "ssh://ethall@host.xz/~ethall/path/to/repo.git/",
+        "ssh://ethall@host.xz/~ethall/path/to/repo.git",
+        "ssh://ethall@host.xz:111/~ethall/path/to/repo.git/",
+        "ssh://ethall@host.xz:111/~ethall/path/to/repo.git"];
 
     pub const GIT_URL_ARRAY: &'static [&'static str] = &[
         "git://host.xz/path/to/repo.git/",

@@ -1,6 +1,6 @@
 use slog::Logger;
 use std::path::{Path,PathBuf};
-use git::get_git_checkout;
+use scm::git::get_git_checkout;
 use url::Url;
 use std::env::current_dir;
 use names::Generator;
