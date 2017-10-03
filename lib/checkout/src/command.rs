@@ -3,7 +3,7 @@ use slog::Logger;
 use etrain_core::command::MainCommand;
 use etrain_core::logging::{logging, get_verbosity_level};
 use etrain_core::config::{ConfigParser, ConfigContainer, ConfigSource, ConfigValue};
-use scm::scm::{do_scm_checkout, create_url};
+use scm::core::{do_scm_checkout, create_url};
 use std::process;
 use etrain_core::cli::CliResolver;
 use etrain_core::BASE_APPLICATION_NAME;
@@ -58,8 +58,11 @@ fn possible_checkout_sources(commands: Vec<String>) -> Vec<String> {
     return avaliable_sources.into_iter().collect();
 }
 
-pub struct CheckoutCommand {
+pub fn build_checkout_command() -> impl MainCommand {
+    return CheckoutCommand{};
 }
+
+struct CheckoutCommand {}
 
 impl MainCommand for CheckoutCommand {
     fn execute(&self, args: Vec<String>, logger: &Logger, config_container: &ConfigContainer, sub_commands: Vec<String>) -> i32 {

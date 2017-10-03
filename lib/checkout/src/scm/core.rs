@@ -85,7 +85,7 @@ fn extract_directory(last_path_chunk: &str) -> PathBuf {
 mod test {
     use super::*;
     use slog::{Discard, Logger};
-    use git::test::*;
+    use scm::git::test::*;
 
     macro_rules! checkout_destination_from_url {
         ($($name:ident: $arguments:expr,)*) => {

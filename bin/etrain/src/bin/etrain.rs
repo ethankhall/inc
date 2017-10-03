@@ -20,9 +20,10 @@ fn main() {
 
 fn run() -> i32 {
     let log_level = get_verbosity_level();
-    let logger = logging(log_level, String::from(BASE_APPLICATION_NAME));
+    let app_name = String::from(BASE_APPLICATION_NAME);
+    let logger = logging(log_level, &app_name);
 
-    let cli_resolver = CliResolver { logger: logger.new(slog_o!()), prefix: String::from(BASE_APPLICATION_NAME) };
+    let cli_resolver = CliResolver { logger: logger.new(slog_o!()), prefix: app_name };
     let commands = cli_resolver.find_commands();
     let requested_command = build_sub_command_args(logger.clone());
 

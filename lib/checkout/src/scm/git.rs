@@ -2,7 +2,7 @@ use slog::Logger;
 use std::collections::LinkedList;
 use std::process::Command;
 use std::path::Path;
-use scm::scm::{ScmUrl, CheckoutError};
+use scm::core::{ScmUrl, CheckoutError};
 use regex::RegexSet;
 
 #[derive(Debug)]

@@ -1,2 +1,2 @@
-pub mod scm;
+pub mod core;
 pub mod git;
