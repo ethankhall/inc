@@ -2,7 +2,7 @@ use slog::Logger;
 use std::collections::LinkedList;
 use std::process::Command;
 use std::path::Path;
-use scm::core::{ScmUrl, CheckoutError};
+use libs::scm::core::{ScmUrl, CheckoutError};
 use regex::RegexSet;
 
 #[derive(Debug)]
@@ -20,8 +20,7 @@ pub fn get_git_checkout(logger: Logger, url: ScmUrl) -> Option<GitScm> {
 }
 
 #[cfg(test)]
-pub mod test {
-    use super::*;
+pub mod test_data {
 
     pub const SSH_URL_ARRAY: &'static [&'static str] = &[
         "ssh://host.xz/path/to/repo.git/",
@@ -71,6 +70,12 @@ pub mod test {
     pub const CUSTOM_URLS_ARRAY: &'static [&'static str] = &[
         "git@github.com:ethankhall/etrain.git",
         "https://github.com/ethankhall/etrain.git"];
+}
+
+#[cfg(test)]
+pub mod test {
+    use super::*;
+    use super::test_data::*;
 
     macro_rules! is_git_url {
         ($($name:ident: $arguments:expr,)*) => {

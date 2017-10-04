@@ -4,5 +4,4 @@ version = "0.1.0"
 authors = ["Ethan Hall <ethan@ehdev.io>"]
 
 [dependencies]
-etrain-core = { version = "0.1.0", path = "../../lib/core" }
-etrain-main-entrypoint-lib = { version = "0.1.0", path = "../../lib/main-entrypoint" }
+inc-impl = { version = "0.1.0", path = "../../lib/impl" }

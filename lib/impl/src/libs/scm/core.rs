@@ -1,6 +1,6 @@
 use slog::Logger;
 use std::path::{Path,PathBuf};
-use scm::git::get_git_checkout;
+use libs::scm::git::get_git_checkout;
 use url::Url;
 use std::env::current_dir;
 use names::Generator;
@@ -85,7 +85,7 @@ fn extract_directory(last_path_chunk: &str) -> PathBuf {
 mod test {
     use super::*;
     use slog::{Discard, Logger};
-    use scm::git::test::*;
+    use libs::scm::git::test_data::*;
 
     macro_rules! checkout_destination_from_url {
         ($($name:ident: $arguments:expr,)*) => {

@@ -1,10 +1,10 @@
-use etrain_core::command::{MainCommand, CommandContainer, LoggingContainer};
-use etrain_core::config::{ConfigContainer, ConfigSource};
-use scm::core::{do_scm_checkout, create_url};
-use etrain_core::BASE_APPLICATION_NAME;
+use core::command::{MainCommand, CommandContainer, LoggingContainer};
+use core::config::{ConfigContainer, ConfigSource};
+use libs::scm::core::{do_scm_checkout, create_url};
+use core::BASE_APPLICATION_NAME;
 use std::collections::HashSet;
 use docopt::Docopt;
-use {PRE_DEFINED_CHECKOUT_SOURCES, DEFAULT_CHECKOUT_SOURCE};
+use libs::scm::{PRE_DEFINED_CHECKOUT_SOURCES, DEFAULT_CHECKOUT_SOURCE};
 
 #[derive(Deserialize, Debug)]
 struct Args {
@@ -53,11 +53,7 @@ fn possible_checkout_sources(commands: Vec<String>) -> Vec<String> {
     return avaliable_sources.into_iter().collect();
 }
 
-pub fn build_checkout_command() -> impl MainCommand {
-    return CheckoutCommand{};
-}
-
-struct CheckoutCommand {}
+pub(crate) struct CheckoutCommand {}
 
 impl MainCommand for CheckoutCommand {
     fn execute(&self, args: Vec<String>, logging_container: &LoggingContainer, config_container: &ConfigContainer, 

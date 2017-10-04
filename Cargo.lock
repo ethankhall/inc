@@ -1,15 +1,17 @@
 [root]
-name = "etrain-main-entrypoint-lib"
+name = "inc-impl"
 version = "0.1.0"
 dependencies = [
  "docopt 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "etrain-core 0.1.0",
  "names 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "slog 2.0.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "slog-async 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "slog-term 2.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "yaml-rust 0.3.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -63,30 +65,14 @@ dependencies = [
 name = "etrain"
 version = "0.1.0"
 dependencies = [
- "etrain-core 0.1.0",
- "etrain-main-entrypoint-lib 0.1.0",
+ "inc-impl 0.1.0",
 ]
 
 [[package]]
 name = "etrain-checkout"
 version = "0.1.0"
 dependencies = [
- "etrain-checkout-lib 0.1.0",
- "etrain-core 0.1.0",
-]
-
-[[package]]
-name = "etrain-checkout-lib"
-version = "0.1.0"
-dependencies = [
- "docopt 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "etrain-core 0.1.0",
- "names 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "regex 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_derive 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
- "slog 2.0.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "url 1.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "inc-impl 0.1.0",
 ]
 
 [[package]]

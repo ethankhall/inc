@@ -1,14 +1,16 @@
 [package]
-name = "etrain-main-entrypoint-lib"
+name = "inc-impl"
 version = "0.1.0"
 authors = ["Ethan Hall <ethan@ehdev.io>"]
 
 [dependencies]
+slog = { version = "2", features = ["max_level_trace", "release_max_level_trace"] }
+slog-term = "2"
+slog-async = "2"
+yaml-rust = "0.3"
 docopt = "0.8.1"
 serde = "1.0" # if you're using `derive(Deserialize)`
 serde_derive = "1.0" # if you're using `derive(Deserialize)`
 regex = "0.2"
 url = "1.5.1"
 names = "0.11.0"
-etrain-core = { version = "0.1.0", path = "../core" }
-slog = { version = "2", features = ["max_level_trace", "release_max_level_trace"] }

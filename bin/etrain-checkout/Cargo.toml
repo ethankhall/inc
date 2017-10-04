@@ -4,5 +4,4 @@ version = "0.1.0"
 authors = ["Ethan Hall <ethan@ehdev.io>"]
 
 [dependencies]
-etrain-core = { version = "0.1.0", path = "../../lib/core" }
-etrain-checkout-lib = { version = "0.1.0", path = "../../lib/checkout" }
+inc-impl = { version = "0.1.0", path = "../../lib/impl" }

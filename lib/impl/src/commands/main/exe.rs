@@ -1,19 +1,14 @@
 use std::env::{current_exe, var};
 use slog::{Logger, Level};
-use args::build_sub_command_args;
+use commands::main::args::build_sub_command_args;
 use std::process::{Command};
 use std::collections::{HashMap, HashSet};
 use std::vec::Vec;
-use etrain_core::BASE_APPLICATION_NAME;
-use etrain_core::command::{LoggingContainer, MainCommand, CommandContainer};
-use etrain_core::config::ConfigContainer;
+use core::BASE_APPLICATION_NAME;
+use core::command::{LoggingContainer, MainCommand, CommandContainer};
+use core::config::ConfigContainer;
 
-pub fn build_main_command() -> impl MainCommand {
-    return MainEntryPoint { };
-}
-
-struct MainEntryPoint {
-
+pub struct MainEntryPoint {
 }
 
 impl MainCommand for MainEntryPoint {

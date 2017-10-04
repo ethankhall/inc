@@ -1,8 +1,7 @@
-extern crate etrain_core;
-extern crate etrain_main_entrypoint_lib;
+extern crate inc_impl;
 
-use etrain_main_entrypoint_lib::exe::build_main_command;
-use etrain_core::mains::root_main;
+use inc_impl::commands::build_main_command;
+use inc_impl::core::mains::root_main;
 use std::process;
 
 fn main() {
