@@ -1,17 +1,20 @@
-use slog::Logger;
+use slog::{Logger, Level};
 use libs::scm::{ScmUrl, CheckoutError, ScmProvier};
 use libs::scm::util::compute_destination;
 use libs::scm::provider::git::{GitScm};
 use libs::process::SystemBinary;
+use libs::scm::services::build_service_map;
 
-pub fn build_url_from_service(logger: &Logger, service: String, repo: String, command: Vec<SystemBinary>) -> Result<String, CheckoutError> {
+pub fn build_url_from_service(logger: &Logger, level: Level, service: String, user_input: String, command: &Vec<SystemBinary>) -> Result<ScmUrl, CheckoutError> {
     slog_debug!(logger, "Origonal input: {}", service);
+    let service_map = build_service_map(logger, level, command);
     let service = service.to_lowercase();
-    return if service == "github" {
-        Ok(format!("git@github.com:{0}.git", repo))
-    } else {
-        Err(CheckoutError { error: String::from("Unknown service!") })
-    };
+    let service = service.as_str();
+
+    return match service_map.get(service) {
+        Some(svc) => svc.generate_url(user_input),
+        None => Err(CheckoutError { error: format!("Unable to find determine how to execute {}", service)})
+    }
 }
 
 pub fn checkout(logger: &Logger, repo_url: ScmUrl, destination: Option<String>) -> Result<i32, CheckoutError> {

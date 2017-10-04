@@ -24,7 +24,9 @@ fn convert_command_set_to_map(commands: HashSet<SystemBinary>) -> HashMap<String
             let map_value = return_map.get_mut(key.as_str());
             map_value.unwrap().sub_commands.push(command);
         } else {
-            return_map.insert(command.clone().name, SystemCommand{ binary: command, sub_commands: vec![] });
+            let alias_prefix = format!("{}-", BASE_APPLICATION_NAME);
+            let alias = String::from(&command.name[(alias_prefix.len())..]);
+            return_map.insert(command.clone().name, SystemCommand{ binary: command, alias: alias, sub_commands: vec![] });
         }
     } 
 

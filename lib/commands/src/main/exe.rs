@@ -2,11 +2,13 @@ use std::env::{current_exe, var};
 use slog::{Logger, Level};
 use main::args::build_sub_command_args;
 use std::process::{Command};
-use std::collections::{HashMap, HashSet};
+use std::collections::{HashMap};
 use std::vec::Vec;
 use inc_core::core::BASE_APPLICATION_NAME;
 use inc_core::core::command::{LoggingContainer, MainCommand, CommandContainer};
 use inc_core::core::config::ConfigContainer;
+use inc_core::libs::process::SystemCommand;
+use std::fmt::Write;
 
 pub struct MainEntryPoint {
 }
@@ -34,36 +36,41 @@ impl MainCommand for MainEntryPoint {
 fn entrypoint(args: Vec<String>, 
         logger: &Logger,
         log_level: &Level,
-        sub_commands: &HashMap<String, Vec<String>>) -> i32 {
+        sub_commands: &HashMap<String, SystemCommand>) -> i32 {
     
     let requested_command = build_sub_command_args(logger, args);
-    let commands = sub_commands.keys().map(|x| (x.clone())).collect();
+    let commands: Vec<&SystemCommand> = sub_commands.values().collect();
 
     slog_trace!(logger, "Found commands: {:?}", commands);
     slog_trace!(logger, "Requested command: {:?}", requested_command);
 
+    let help_message = build_help(&commands);
+
     if let Err(value) = requested_command {
         slog_warn!(logger, "{}", value);
-        print_help(logger, commands);
+        slog_info!(logger, "{}", help_message);
         return 1;
     }
 
     let requested_command = requested_command.unwrap();
 
     if requested_command.command == "help" {
-        print_help(logger, commands);
+        slog_info!(logger, "{}", help_message);
         return 0;
     }
 
-    if !commands.contains(&*requested_command.command) {
+    let avaliable_command = commands.iter().find(|x| x.alias == requested_command.command);
+    if avaliable_command.is_none() {
         slog_warn!(logger, "Unknown command `{}`", requested_command.command);
-        print_help(logger, commands);
+        slog_info!(logger, "{}", help_message);
         return 1;
     }
 
-    let command_name = format!("{}-{}", BASE_APPLICATION_NAME, requested_command.command);
-    slog_trace!(logger, "Trying to execute {}", command_name);
-    let mut child = Command::new(command_name)
+    let avaliable_command = avaliable_command.unwrap();
+
+    let command_path = &avaliable_command.binary.path;
+    slog_trace!(logger, "Trying to execute {:?}", command_path);
+    let mut child = Command::new(command_path)
         .args(requested_command.arguments)
         .env("INC_LOG_LEVEL", log_level.as_str())
         .env("PATH", build_path())
@@ -91,11 +98,14 @@ fn build_path() -> String {
     return format!("{}{}", path, path_extension);
 }
 
-fn print_help(logger: &Logger, available_commands: HashSet<String>) {
-    slog_info!(logger, "usage: inc [--verbose (-v)] <command> <args>");
-    slog_info!(logger, "Available commands:");
+fn build_help(available_commands: &Vec<&SystemCommand>) -> String {
+    let mut help = String::new();
+    write!(&mut help, "usage: inc [--verbose (-v)] <command> <args>\n");
+    write!(&mut help, "Available commands:\n");
 
-    for command in available_commands {
-        slog_info!(logger, "\t{}", command)
+    for command in available_commands.iter() {
+        write!(&mut help, "\t{}", command.alias);
     }
+
+    return help
 }

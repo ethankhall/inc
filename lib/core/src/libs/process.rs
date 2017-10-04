@@ -7,6 +7,7 @@ use std::path::PathBuf;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SystemCommand {
     pub binary: SystemBinary,
+    pub alias: String,
     pub sub_commands: Vec<SystemBinary>
 }
 
@@ -18,12 +19,12 @@ pub struct SystemBinary {
 
 #[derive(Debug, Clone)]
 pub struct SubProcessArguments {
-    pub command: String,
+    pub command: PathBuf,
     pub arguments: Vec<String>,
 }
 
 pub fn run_command_with_output(logger: &Logger, log_level: Level, args: SubProcessArguments) -> Result<String, String> {
-    slog_trace!(logger, "Trying to execute {}", args.command);
+    slog_trace!(logger, "Trying to execute {:?}", args.command);
 
     
     let mut command = Command::new(args.command.clone());
@@ -34,7 +35,7 @@ pub fn run_command_with_output(logger: &Logger, log_level: Level, args: SubProce
         .output()
         .expect("command failed to start");
     if !output.status.success() {
-        return Err(format!("Unable to run  {} it returned {}", args.command, output.status));
+        return Err(format!("Unable to run {:?} it returned {}", args.command, output.status));
     }
 
     return Ok(String::from_utf8_lossy(&output.stdout).to_string());
