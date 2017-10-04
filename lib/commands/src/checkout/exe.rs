@@ -1,10 +1,10 @@
-use core::command::{MainCommand, CommandContainer, LoggingContainer};
-use core::config::{ConfigContainer, ConfigSource};
-use libs::scm::core::{do_scm_checkout, create_url};
-use core::BASE_APPLICATION_NAME;
+use inc_core::core::command::{MainCommand, CommandContainer, LoggingContainer};
+use inc_core::core::config::{ConfigContainer, ConfigSource};
+use inc_core::libs::scm::api::{build_url_from_service, checkout};
+use inc_core::core::BASE_APPLICATION_NAME;
 use std::collections::HashSet;
 use docopt::Docopt;
-use libs::scm::{PRE_DEFINED_CHECKOUT_SOURCES, DEFAULT_CHECKOUT_SOURCE};
+use inc_core::libs::scm::{PRE_DEFINED_CHECKOUT_SOURCES, DEFAULT_CHECKOUT_SOURCE};
 
 #[derive(Deserialize, Debug)]
 struct Args {
@@ -76,13 +76,13 @@ impl MainCommand for CheckoutCommand {
 
         slog_debug!(logger, "Checking out {} from {} into {:?}", repository, service, destination);
 
-        let url = create_url(logger.clone(), service, repository);
+        let url = build_url_from_service(&logger, service, repository);
         if let Err(e) = url {
             slog_debug!(logger, "Error building URL: {:?}", e);
             return 2;
         }
 
-        let result = do_scm_checkout(logger.clone(), url.unwrap(), destination);
+        let result = checkout(&logger, url.unwrap(), destination);
 
         slog_trace!(logger, "Results from checkout: {:?}", result);
 

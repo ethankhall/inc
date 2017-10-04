@@ -1,6 +1,7 @@
 extern crate inc_core;
+extern crate inc_commands;
 
-use inc_core::commands::build_checkout_command;
+use inc_commands::build_checkout_command;
 use inc_core::core::mains::sub_command_run;
 use std::process;
 use std::env::args;

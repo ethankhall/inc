@@ -5,8 +5,6 @@ dependencies = [
  "docopt 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "names 0.11.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "regex 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_derive 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "slog 2.0.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "slog-async 2.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "slog-term 2.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -65,6 +63,7 @@ dependencies = [
 name = "etrain"
 version = "0.1.0"
 dependencies = [
+ "inc-commands 0.1.0",
  "inc-core 0.1.0",
 ]
 
@@ -72,6 +71,7 @@ dependencies = [
 name = "etrain-checkout"
 version = "0.1.0"
 dependencies = [
+ "inc-commands 0.1.0",
  "inc-core 0.1.0",
 ]
 
@@ -83,6 +83,17 @@ dependencies = [
  "matches 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "unicode-bidi 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "unicode-normalization 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "inc-commands"
+version = "0.1.0"
+dependencies = [
+ "docopt 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "inc-core 0.1.0",
+ "serde 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.15 (registry+https://github.com/rust-lang/crates.io-index)",
+ "slog 2.0.12 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

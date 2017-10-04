@@ -1,12 +1,12 @@
 use std::env::{current_exe, var};
 use slog::{Logger, Level};
-use commands::main::args::build_sub_command_args;
+use main::args::build_sub_command_args;
 use std::process::{Command};
 use std::collections::{HashMap, HashSet};
 use std::vec::Vec;
-use core::BASE_APPLICATION_NAME;
-use core::command::{LoggingContainer, MainCommand, CommandContainer};
-use core::config::ConfigContainer;
+use inc_core::core::BASE_APPLICATION_NAME;
+use inc_core::core::command::{LoggingContainer, MainCommand, CommandContainer};
+use inc_core::core::config::ConfigContainer;
 
 pub struct MainEntryPoint {
 }

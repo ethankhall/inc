@@ -1,6 +1,7 @@
 extern crate inc_core;
+extern crate inc_commands;
 
-use inc_core::commands::build_main_command;
+use inc_commands::build_main_command;
 use inc_core::core::mains::root_main;
 use std::process;
 

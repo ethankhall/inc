@@ -2,130 +2,42 @@ use slog::Logger;
 use std::collections::LinkedList;
 use std::process::Command;
 use std::path::Path;
-use libs::scm::core::{ScmUrl, CheckoutError};
+use libs::scm::{ScmUrl, CheckoutError, ScmProvier};
 use regex::RegexSet;
+use url::Url;
 
-#[derive(Debug)]
-pub struct GitScm {
-    logger: Logger,
-    url: ScmUrl,
+#[derive(Debug, Clone)]
+pub struct GitScm<'a> {
+    pub logger: &'a Logger
 }
 
-pub fn get_git_checkout(logger: Logger, url: ScmUrl) -> Option<GitScm> {
-    return if is_git_url(url.clone()) {
-        Some(GitScm { logger, url })
-    } else {
-        None
-    }
-}
+pub(crate) const GIT_URL_REGEX: &'static [&'static str] = &[
+    // => ssh://[user@]host.xz[:port]/path/to/repo.git/
+    r"ssh://((.*@)?)([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
+    // => git://host.xz[:port]/path/to/repo.git/
+    r"git://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
+    // => http[s]://host.xz[:port]/path/to/repo.git/
+    r"http(s?)://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
+    // => ftp[s]://host.xz[:port]/path/to/repo.git/
+    r"ftp(s?)://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
+    // => /path/to/repo.git/
+    r"/(.+?)(\.git(/)?)",
+    // => file:///path/to/repo.git/
+    r"file:///(.+?)(\.git(/)?)"];
 
-#[cfg(test)]
-pub mod test_data {
-
-    pub const SSH_URL_ARRAY: &'static [&'static str] = &[
-        "ssh://host.xz/path/to/repo.git/",
-        "ssh://host.xz/path/to/repo.git",
-        "ssh://ethall@host.xz/path/to/repo.git/",
-        "ssh://ethall@host.xz/path/to/repo.git",
-        "ssh://host.xz:111/path/to/repo.git/",
-        "ssh://host.xz:111/path/to/repo.git",
-        "ssh://ethall@host.xz:111/path/to/repo.git/",
-        "ssh://ethall@host.xz:111/path/to/repo.git",
-        "ssh://host.xz/~ethall/path/to/repo.git/",
-        "ssh://host.xz/~ethall/path/to/repo.git",
-        "ssh://ethall@host.xz/~ethall/path/to/repo.git/",
-        "ssh://ethall@host.xz/~ethall/path/to/repo.git",
-        "ssh://ethall@host.xz:111/~ethall/path/to/repo.git/",
-        "ssh://ethall@host.xz:111/~ethall/path/to/repo.git"];
-
-    pub const GIT_URL_ARRAY: &'static [&'static str] = &[
-        "git://host.xz/path/to/repo.git/",
-        "git://host.xz/path/to/repo.git",
-        "git://host.xz:111/path/to/repo.git/",
-        "git://host.xz:111/path/to/repo.git",
-        "git://host.xz:to/repo.git",];
-
-    pub const HTTP_URL_ARRAY: &'static [&'static str] = &[
-        "http://host.xz/path/to/repo.git/",
-        "http://host.xz/path/to/repo.git",
-        "http://host.xz:222/path/to/repo.git/",
-        "http://host.xz:222/path/to/repo.git",
-        "https://host.xz/path/to/repo.git/",
-        "https://host.xz/path/to/repo.git",
-        "https://host.xz:222/path/to/repo.git/",
-        "https://host.xz:222/path/to/repo.git",];
-
-    pub const FTP_URL_ARRAY: &'static [&'static str] = &[
-        "ftp://host.xz/path/to/repo.git/",
-        "ftps://host.xz/path/to/repo.git/",
-        "ftp://host.xz:222/path/to/repo.git/",
-        "ftps://host.xz:222/path/to/repo.git/",];
-
-    pub const FILE_URL_ARRAY: &'static [&'static str] = &[
-        "/path/to/repo.git",
-        "/path/to/repo.git/",
-        "file:///path/to/repo.git",
-        "file:///path/to/repo.git/",];
-
-    pub const CUSTOM_URLS_ARRAY: &'static [&'static str] = &[
-        "git@github.com:ethankhall/etrain.git",
-        "https://github.com/ethankhall/etrain.git"];
-}
-
-#[cfg(test)]
-pub mod test {
-    use super::*;
-    use super::test_data::*;
-
-    macro_rules! is_git_url {
-        ($($name:ident: $arguments:expr,)*) => {
-        $(
-            #[test]
-            fn $name() {
-                for arg in $arguments.iter() {
-                    assert!(is_git_url(ScmUrl::from(*arg)));
-                }
-            }
-        )*
-        }
+impl <'a> ScmProvier for GitScm<'a> {
+    fn sugested_checkout_name(&self, url: &ScmUrl) -> Option<String> {
+        return if self.handles_url(url) {
+            compute_destination(url.clone())
+        } else {
+            None
+        };
     }
 
-    is_git_url! {
-        will_accept_ssh_url: SSH_URL_ARRAY,
-        will_accept_git_url: GIT_URL_ARRAY,
-        will_accept_http_url: HTTP_URL_ARRAY,
-        will_accept_ftp_url: FTP_URL_ARRAY,
-        will_accept_file_path: FILE_URL_ARRAY,
-        will_accept_custom_urls: CUSTOM_URLS_ARRAY,
-    }
-}
-
-fn is_git_url(url: ScmUrl) -> bool {
-    let regex_set = RegexSet::new(
-        &[
-            // => ssh://[user@]host.xz[:port]/path/to/repo.git/
-            r"ssh://((.*@)?)([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
-            // => git://host.xz[:port]/path/to/repo.git/
-            r"git://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
-            // => http[s]://host.xz[:port]/path/to/repo.git/
-            r"http(s?)://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
-            // => ftp[s]://host.xz[:port]/path/to/repo.git/
-            r"ftp(s?)://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
-            // => /path/to/repo.git/
-            r"/(.+?)(\.git(/)?)",
-            // => file:///path/to/repo.git/
-            r"file:///(.+?)(\.git(/)?)",
-        ],
-    ).unwrap();
-    return regex_set.matches(url.as_str()).matched_any();
-}
-
-impl GitScm {
-    pub fn do_checkout(&self, destination: &Path) -> Result<i32, CheckoutError> {
-
+    fn do_checkout(&self, url: &ScmUrl, destination: &Path) -> Result<i32, CheckoutError> {
         let mut args: LinkedList<String> = LinkedList::new();
         args.push_back(String::from("clone"));
-        args.push_back(self.url.as_str().to_string());
+        args.push_back(url.clone());
         args.push_back((*destination).to_str().unwrap().to_string());
 
         slog_trace!(self.logger, "About to execute {:?}", args);
@@ -140,4 +52,40 @@ impl GitScm {
             None => Err(CheckoutError { error: String::from("Unknown Error") }),
         };
     }
+
+    fn handles_url(&self, url: &ScmUrl) -> bool {
+        let regex_set = RegexSet::new(GIT_URL_REGEX).unwrap();
+        let matches = regex_set.matches(url.as_str()).matched_any();
+        slog_debug!(self.logger, "GIT: `{}` is a git url? => {}", url, matches);
+        return matches;
+    }
+}
+
+fn compute_destination(url: ScmUrl) -> Option<String> {
+    let sanitized_url = if url.ends_with("/") || url.ends_with("\\") {
+        String::from(&(url[..(url.len() - 1)]))
+    } else {
+        url
+    };
+
+    let parsed_url = Url::parse(sanitized_url.as_str().clone());
+    if let Ok(unwrapped_url) = parsed_url {
+        return Some(extract_directory(unwrapped_url.path()));
+    }
+
+    let index = sanitized_url.as_str().rfind("/");
+    if let Some(index) = index {
+        return Some(extract_directory(&(sanitized_url[(index)..])));
+    }
+
+    let index = sanitized_url.as_str().rfind("\\");
+    if let Some(index) = index {
+        return Some(extract_directory(&(sanitized_url[(index)..])));
+    }
+    
+    return None;
+}
+
+fn extract_directory(last_path_chunk: &str) -> String {
+    return String::from(Path::new(last_path_chunk).file_stem().unwrap().to_str().unwrap());
 }
