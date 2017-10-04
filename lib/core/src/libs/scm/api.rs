@@ -1,9 +1,10 @@
 use slog::Logger;
 use libs::scm::{ScmUrl, CheckoutError, ScmProvier};
 use libs::scm::util::compute_destination;
-use libs::scm::git::{GitScm};
+use libs::scm::provider::git::{GitScm};
+use libs::process::SystemBinary;
 
-pub fn build_url_from_service(logger: &Logger, service: String, repo: String) -> Result<String, CheckoutError> {
+pub fn build_url_from_service(logger: &Logger, service: String, repo: String, command: Vec<SystemBinary>) -> Result<String, CheckoutError> {
     slog_debug!(logger, "Origonal input: {}", service);
     let service = service.to_lowercase();
     return if service == "github" {

@@ -2,6 +2,7 @@ use core::config::ConfigContainer;
 use slog::{Logger, Level};
 use std::path::PathBuf;
 use std::collections::HashMap;
+use libs::process::SystemCommand;
 
 #[derive(Debug)]
 pub struct SubCommandLocation {
@@ -11,7 +12,7 @@ pub struct SubCommandLocation {
 
 #[derive(Debug)]
 pub struct CommandContainer {
-    pub commands: HashMap<String, Vec<String>>
+    pub commands: HashMap<String, SystemCommand>
 }
 
 #[derive(Debug)]
@@ -21,10 +22,10 @@ pub struct LoggingContainer<'a> {
 }
 
 impl CommandContainer {
-    pub fn find_sub_commands(&self, command: String) -> Vec<String> {
+    pub fn find_sub_commands(&self, command: String) -> Option<SystemCommand> {
         return match self.commands.get(&(command)) {
-            Some(value) => value.clone(),
-            None => Vec::new()
+            Some(value) => Some(value.clone()),
+            None => None
         };
     }
 }

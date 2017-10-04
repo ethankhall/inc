@@ -1,7 +1,7 @@
 use std::collections::LinkedList;
 use slog::Logger;
 
-#[derive(Deserialize, Debug)]
+#[derive(Debug)]
 pub(crate) struct SubCommandArguments {
     pub(crate) command: String,
     pub(crate) arguments: LinkedList<String>,

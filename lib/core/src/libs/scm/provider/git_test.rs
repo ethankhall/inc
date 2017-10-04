@@ -53,7 +53,7 @@ pub mod test_data {
 
 #[cfg(test)]
 pub mod test {
-    use libs::scm::git::*;
+    use libs::scm::provider::git::*;
     use libs::scm::{ScmProvier, ScmUrl};
     use super::test_data::*;
     use slog::{Discard, Logger};

@@ -5,6 +5,7 @@ use inc_core::core::BASE_APPLICATION_NAME;
 use std::collections::HashSet;
 use docopt::Docopt;
 use inc_core::libs::scm::{PRE_DEFINED_CHECKOUT_SOURCES, DEFAULT_CHECKOUT_SOURCE};
+use inc_core::libs::process::SystemBinary;
 
 #[derive(Deserialize, Debug)]
 struct Args {
@@ -39,15 +40,19 @@ Args:
 ", default = default_service, services = service_options);
 }
 
-fn possible_checkout_sources(commands: Vec<String>) -> Vec<String> {
+fn possible_checkout_sources(commands: Vec<SystemBinary>) -> Vec<String> {
     let mut avaliable_sources: HashSet<String> = HashSet::new();
 
     for existing in PRE_DEFINED_CHECKOUT_SOURCES {
         avaliable_sources.insert(String::from(*existing));
     }
 
+    let service_prefix = (BASE_APPLICATION_NAME.to_owned() + "-service-").as_str();
+
     for external_source in commands.into_iter() {
-        avaliable_sources.insert(external_source);
+        if external_source.name.starts_with(service_prefix) {
+            avaliable_sources.insert(String::from(&external_source.name[(service_prefix.len())..]));
+        }
     }
 
     return avaliable_sources.into_iter().collect();
@@ -61,7 +66,10 @@ impl MainCommand for CheckoutCommand {
         
         let logger = logging_container.logger;
 
-        let sub_commands = command_container.find_sub_commands(self.get_command_prefix());
+        let sub_commands = match command_container.find_sub_commands(self.get_command_prefix()) {
+            Some(value) => value.sub_commands,
+            None => Vec::new()
+        };
 
         let service_options = possible_checkout_sources(sub_commands);
         let default_sources = config_container.get_from_source_default(String::from("checkout.default"), ConfigSource::Home, String::from(DEFAULT_CHECKOUT_SOURCE));
@@ -76,7 +84,7 @@ impl MainCommand for CheckoutCommand {
 
         slog_debug!(logger, "Checking out {} from {} into {:?}", repository, service, destination);
 
-        let url = build_url_from_service(&logger, service, repository);
+        let url = build_url_from_service(&logger, service, repository, sub_commands);
         if let Err(e) = url {
             slog_debug!(logger, "Error building URL: {:?}", e);
             return 2;

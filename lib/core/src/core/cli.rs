@@ -5,34 +5,35 @@ use std::env::{self, current_exe};
 use std::fs::{self, DirEntry, ReadDir};
 use slog::Logger;
 use core::BASE_APPLICATION_NAME;
+use libs::process::{SystemBinary, SystemCommand};
 
-pub fn find_commands_avalible(logger: &Logger) -> HashMap<String, Vec<String>> {
+pub fn find_commands_avalible(logger: &Logger) -> HashMap<String, SystemCommand> {
     let commands = find_commands(logger);
     return convert_command_set_to_map(commands);
 }
 
-fn convert_command_set_to_map(commands: HashSet<String>) -> HashMap<String, Vec<String>> {
-    let mut commands: Vec<String> = commands.into_iter().collect();
-    let mut return_map: HashMap<String, Vec<String>> = HashMap::new();
+fn convert_command_set_to_map(commands: HashSet<SystemBinary>) -> HashMap<String, SystemCommand> {
+    let mut commands: Vec<SystemBinary> = commands.into_iter().collect();
+    let mut return_map: HashMap<String, SystemCommand> = HashMap::new();
 
     //Get the string into length order
-    commands.sort_by(|a, b| a.len().cmp(&(b.len())));
+    commands.sort_by(|a, b| a.name.len().cmp(&(b.name.len())));
 
     for command in commands {
         if let Some(key) = find_key_from_command(&command, &return_map) {
             let map_value = return_map.get_mut(key.as_str());
-            map_value.unwrap().push(command);
+            map_value.unwrap().sub_commands.push(command);
         } else {
-            return_map.insert(command, vec![]);
+            return_map.insert(command.clone().name, SystemCommand{ binary: command, sub_commands: vec![] });
         }
-    }
+    } 
 
     return return_map;
 }
 
 
-fn find_key_from_command(command: &String, map: &HashMap<String, Vec<String>>) -> Option<String> {
-    let split_command: Vec<String> = (*command).clone().as_str().split("-").map(|x| String::from(x)).collect();
+fn find_key_from_command(command: &SystemBinary, map: &HashMap<String, SystemCommand>) -> Option<String> {
+    let split_command: Vec<String> = (*command).clone().name.as_str().split("-").map(|x| String::from(x)).collect();
     for i in 0..(split_command.len()) {
         let joint = split_command[0..(i)].join("-");
         if map.contains_key(joint.as_str()) {
@@ -77,8 +78,8 @@ mod test {
     }
 }
 
-fn find_commands(logger: &Logger) -> HashSet<String> {
-    let mut sub_commands: HashSet<String> = HashSet::new();
+fn find_commands(logger: &Logger) -> HashSet<SystemBinary> {
+    let mut sub_commands: HashSet<SystemBinary> = HashSet::new();
 
     if let Ok(path) = env::var("PATH") {
         for split_path in path.split(":") {
@@ -107,7 +108,7 @@ fn find_commands(logger: &Logger) -> HashSet<String> {
     return sub_commands;
 }
 
-fn process_dir_read(logger: &Logger, sub_commands: &mut HashSet<String>, dir_read: ReadDir) {
+fn process_dir_read(logger: &Logger, sub_commands: &mut HashSet<SystemBinary>, dir_read: ReadDir) {
     for entry in dir_read {
         match entry {
             Ok(ent) => process_dir_entry(logger, sub_commands, ent),
@@ -116,7 +117,7 @@ fn process_dir_read(logger: &Logger, sub_commands: &mut HashSet<String>, dir_rea
     }
 }
 
-fn process_dir_entry(logger: &Logger, sub_commands: &mut HashSet<String>, dir_entry: DirEntry) {
+fn process_dir_entry(logger: &Logger, sub_commands: &mut HashSet<SystemBinary>, dir_entry: DirEntry) {
     let file_name = dir_entry.file_name().into_string();
 
     if file_name.is_err() {
@@ -124,25 +125,31 @@ fn process_dir_entry(logger: &Logger, sub_commands: &mut HashSet<String>, dir_en
         return;
     }
 
+    if let Ok(file_type) = dir_entry.file_type() {
+        if !file_type.is_file() {
+            return;
+        }
+    }
+
     // let path = dir_entry.path();
     let file_name: String = file_name.unwrap();
     let prefix = format!("{}-", BASE_APPLICATION_NAME);
 
     if file_name.starts_with(prefix.as_str()) {
-        if file_is_executable(dir_entry) {
-            sub_commands.insert(file_name[(prefix.len())..].to_string());
+        if file_is_executable(&dir_entry) {
+            sub_commands.insert(SystemBinary{ path: dir_entry.path(), name: file_name.clone() });
             debug!(logger, "Found command {}", file_name);
         }
     }
 }
 
 #[cfg(windows)]
-fn file_is_executable(dir_entry: DirEntry) -> bool {
+fn file_is_executable(dir_entry: &DirEntry) -> bool {
     return true;
 }
 
 #[cfg(unix)]
-fn file_is_executable(dir_entry: DirEntry) -> bool {
+fn file_is_executable(dir_entry: &DirEntry) -> bool {
     use std::os::unix::prelude::*;
 
     let permissions = dir_entry.metadata().unwrap().permissions();
