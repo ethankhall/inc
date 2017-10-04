@@ -54,6 +54,7 @@ pub mod test_data {
 #[cfg(test)]
 pub mod test {
     use libs::scm::git::*;
+    use libs::scm::{ScmProvier, ScmUrl};
     use super::test_data::*;
     use slog::{Discard, Logger};
 
@@ -63,9 +64,9 @@ pub mod test {
             #[test]
             fn $name() {
                 let root = Logger::root(Discard, o!());
-                let git = GitScm { logger: root };
+                let git = GitScm { logger: &root };
                 for arg in $arguments.iter() {
-                    assert!(git.handles_url(ScmUrl::from(*arg)));
+                    assert!(git.handles_url(&ScmUrl::from(*arg)));
                 }
             }
         )*
@@ -87,14 +88,14 @@ pub mod test {
             #[test]
             fn $name() {
                 for arg in $arguments.iter() {
-                    let expected = PathBuf::from("repo");
+                    let expected = String::from("repo");
                     let root = Logger::root(Discard, o!());
                     let url = ScmUrl::from(*arg);
 
-                    let git = GitScm { logger: root };
-                    let name = git.sugested_checkout_name(url);
-                    assert!(file_name.is_some(), "url didn't get parsed: {}", url.clone());
-                    assert_eq!(file_name.unwrap(), expected, "parse url: {}", url.clone());
+                    let git = GitScm { logger: &root };
+                    let name = git.sugested_checkout_name(&url);
+                    assert!(name.is_some(), "url didn't get parsed: {}", url.clone());
+                    assert_eq!(name.unwrap(), expected, "parse url: {}", url.clone());
                 }
             }
         )*
