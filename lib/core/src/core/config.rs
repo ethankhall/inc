@@ -164,12 +164,12 @@ fn parse_config_file(path: PathBuf) -> Option<Vec<Yaml>> {
   * Checks to see if either the yaml or yml file exists.
   */
 fn config_file(prefix: &'static str, path: PathBuf) -> Option<PathBuf> {
-    let config_search = path.join(format!("{}etrain.yaml", prefix));
+    let config_search = path.join(format!("{}inc.yaml", prefix));
     if config_search.exists() {
         return Some(config_search);
     }
 
-    let config_search = path.join(format!("{}etrain.yml", prefix));
+    let config_search = path.join(format!("{}inc.yml", prefix));
     if config_search.exists() {
         return Some(config_search);
     }

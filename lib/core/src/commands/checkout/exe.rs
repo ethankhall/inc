@@ -20,10 +20,10 @@ fn build_usage(default_service: String, service_options: Vec<String>) -> String 
     let service_options = service_options.join(", ");
 
     return format!("Usage:
-    etrain-checkout [--service=<service>] <repository> [<directory>]
-    etrain-checkout [--verbose=<level>] <repository> [<directory>]
-    etrain-checkout (-h | --help)
-    etrain-checkout (-V | --version)
+    inc-checkout [--service=<service>] <repository> [<directory>]
+    inc-checkout [--verbose=<level>] <repository> [<directory>]
+    inc-checkout (-h | --help)
+    inc-checkout (-V | --version)
 
 Flags:
     -h, --help       Prints help information

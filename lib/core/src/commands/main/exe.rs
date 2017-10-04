@@ -61,11 +61,11 @@ fn entrypoint(args: Vec<String>,
         return 1;
     }
 
-    let command_name = format!("etrain-{}", requested_command.command);
+    let command_name = format!("{}-{}", BASE_APPLICATION_NAME, requested_command.command);
     slog_trace!(logger, "Trying to execute {}", command_name);
     let mut child = Command::new(command_name)
         .args(requested_command.arguments)
-        .env("ETRAIN_LOG_LEVEL", log_level.as_str())
+        .env("INC_LOG_LEVEL", log_level.as_str())
         .env("PATH", build_path())
         .spawn()
         .expect("failed to execute process");
@@ -92,7 +92,7 @@ fn build_path() -> String {
 }
 
 fn print_help(logger: &Logger, available_commands: HashSet<String>) {
-    slog_info!(logger, "usage: etrain [--verbose (-v)] <command> <args>");
+    slog_info!(logger, "usage: inc [--verbose (-v)] <command> <args>");
     slog_info!(logger, "Available commands:");
 
     for command in available_commands {

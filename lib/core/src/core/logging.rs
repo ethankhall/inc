@@ -93,7 +93,7 @@ fn parse_from_args() -> Level {
 }
 
 fn parse_from_env() -> Level {
-    if let Ok(inherited_log_level) = env::var("ETRAIN_LOG_LEVEL") {
+    if let Ok(inherited_log_level) = env::var("INC_LOG_LEVEL") {
 
         return if Level::Critical.as_str() == inherited_log_level {
             Level::Critical
