@@ -1,7 +1,7 @@
-extern crate inc_impl;
+extern crate inc_core;
 
-use inc_impl::commands::build_main_command;
-use inc_impl::core::mains::root_main;
+use inc_core::commands::build_main_command;
+use inc_core::core::mains::root_main;
 use std::process;
 
 fn main() {

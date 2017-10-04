@@ -4,4 +4,4 @@ version = "0.1.0"
 authors = ["Ethan Hall <ethan@ehdev.io>"]
 
 [dependencies]
-inc-impl = { version = "0.1.0", path = "../../lib/impl" }
+inc-core = { version = "0.1.0", path = "../../lib/core" }
