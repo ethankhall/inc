@@ -85,8 +85,8 @@ fn find_commands(logger: &Logger) -> HashSet<String> {
             debug!(
                 logger,
                 "Processing {} for {} executables",
-                BASE_APPLICATION_NAME,
-                split_path
+                split_path,
+                BASE_APPLICATION_NAME
             );
             for entry in fs::read_dir(split_path) {
                 process_dir_read(logger, &mut sub_commands, entry);
@@ -126,10 +126,11 @@ fn process_dir_entry(logger: &Logger, sub_commands: &mut HashSet<String>, dir_en
 
     // let path = dir_entry.path();
     let file_name: String = file_name.unwrap();
+    let prefix = format!("{}-", BASE_APPLICATION_NAME);
 
-    if file_name.starts_with(format!("{}-", BASE_APPLICATION_NAME).as_str()) {
+    if file_name.starts_with(prefix.as_str()) {
         if file_is_executable(dir_entry) {
-            sub_commands.insert(file_name[7..].to_string());
+            sub_commands.insert(file_name[(prefix.len())..].to_string());
             debug!(logger, "Found command {}", file_name);
         }
     }
