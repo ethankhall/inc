@@ -49,34 +49,45 @@ fn find_key_from_command(command: &SystemBinary, map: &HashMap<String, SystemCom
 #[cfg(test)]
 mod test {
     use std::iter::FromIterator;
+    use std::path::PathBuf;
     use super::*;
 
     #[test]
     fn will_handle_werdly_named_apps() {
-        let input: Vec<String> = ["a-b", "a-b-c-d", "a-b-c"].iter().map(|x| String::from(*x)).collect();
+        let input: Vec<SystemBinary> = ["a-b", "a-b-c-d", "a-b-c"].iter().map(|x| { 
+            SystemBinary { path: PathBuf::new(), name: format!("inc-{}", x) }
+        }).collect();
         let input = HashSet::from_iter(input);
 
         let result = convert_command_set_to_map(input);
-        assert!(result.contains_key("a-b"), "contains the 'a-b' command");
+        assert!(result.contains_key("inc-a-b"), "contains the 'a-b' command");
         assert_eq!(result.len(), 1, "There should be only one entry");
-        assert_eq!(result.get("a-b").unwrap().len(), 2, "Should have two elements in it");
-        assert!(result.get("a-b").unwrap().contains(&String::from("a-b-c")));
-        assert!(result.get("a-b").unwrap().contains(&String::from("a-b-c-d")));
-        assert!(!result.get("a-b").unwrap().contains(&String::from("a-b-c-d-e")));
+        let command = result.get("inc-a-b").expect("a-b doesn't exist");
+        assert_eq!(command.sub_commands.len(), 2, "Should have two elements in it");
+
+        let sub_commands: Vec<String> = command.sub_commands.iter().map(|x| x.name.clone()).collect();
+        assert!(sub_commands.contains(&String::from("inc-a-b-c")));
+        assert!(sub_commands.contains(&String::from("inc-a-b-c-d")));
+        assert!(!sub_commands.contains(&String::from("inc-a-b-c-d-e")));
     }
 
     #[test]
     fn order_will_not_matter() {
-        let input: Vec<String> = ["a-b-c-d", "a-b", "a-b-c"].iter().map(|x| String::from(*x)).collect();
+        let input: Vec<SystemBinary> = ["a-b-c-d", "a-b", "a-b-c"].iter().map(|x| { 
+            SystemBinary { path: PathBuf::new(), name: format!("inc-{}", x) }
+        }).collect();
         let input = HashSet::from_iter(input);
 
         let result = convert_command_set_to_map(input);
-        assert!(result.contains_key("a-b"), "contains the 'a-b' command");
+        assert!(result.contains_key("inc-a-b"), "contains the 'a-b' command");
         assert_eq!(result.len(), 1, "There should be only one entry");
-        assert_eq!(result.get("a-b").unwrap().len(), 2, "Should have two elements in it");
-        assert!(result.get("a-b").unwrap().contains(&String::from("a-b-c")));
-        assert!(result.get("a-b").unwrap().contains(&String::from("a-b-c-d")));
-        assert!(!result.get("a-b").unwrap().contains(&String::from("a-b-c-d-e")));
+        let command = result.get("inc-a-b").expect("a-b doesn't exist");
+        assert_eq!(command.sub_commands.len(), 2, "Should have two elements in it");
+
+        let sub_commands: Vec<String> = command.sub_commands.iter().map(|x| x.name.clone()).collect();
+        assert!(sub_commands.contains(&String::from("inc-a-b-c")));
+        assert!(sub_commands.contains(&String::from("inc-a-b-c-d")));
+        assert!(!sub_commands.contains(&String::from("inc-a-b-c-d-e")));
     }
 }
 
