@@ -89,6 +89,7 @@ impl MainCommand for CheckoutCommand {
         let url = build_url_from_service(&logger, logging_container.level.clone(), service, repository, &sub_commands);
         if let Err(e) = url {
             slog_debug!(logger, "Error building URL: {:?}", e);
+            slog_error!(logger, "Unable to determine URL. Error: {:?}", e.error);
             return 2;
         }
 
