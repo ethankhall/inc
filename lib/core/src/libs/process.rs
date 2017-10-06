@@ -40,6 +40,12 @@ pub fn run_command_with_output(
         .expect("command failed to start");
 
     if !output.status.success() {
+        for line in String::from_utf8_lossy(&output.stdout).to_string().lines() {
+            slog_error!(logger, "OUT: {}", line);
+        }
+        for line in String::from_utf8_lossy(&output.stderr).to_string().lines() {
+            slog_error!(logger, "ERR: {}", line);
+        }
         return Err(format!(
             "Unable to run {:?} it returned {}",
             args.command,
