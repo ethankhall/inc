@@ -8,24 +8,26 @@ use url::Url;
 
 #[derive(Debug, Clone)]
 pub struct GitScm<'a> {
-    pub logger: &'a Logger
+    pub logger: &'a Logger,
 }
 
-pub(crate) const GIT_URL_REGEX: &'static [&'static str] = &[
-    // => ssh://[user@]host.xz[:port]/path/to/repo.git/
-    r"ssh://((.*@)?)([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
-    // => git://host.xz[:port]/path/to/repo.git/
-    r"git://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
-    // => http[s]://host.xz[:port]/path/to/repo.git/
-    r"http(s?)://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
-    // => ftp[s]://host.xz[:port]/path/to/repo.git/
-    r"ftp(s?)://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
-    // => /path/to/repo.git/
-    r"/(.+?)(\.git(/)?)",
-    // => file:///path/to/repo.git/
-    r"file:///(.+?)(\.git(/)?)"];
+pub(crate) const GIT_URL_REGEX: &'static [&'static str] =
+    &[
+        // => ssh://[user@]host.xz[:port]/path/to/repo.git/
+        r"ssh://((.*@)?)([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
+        // => git://host.xz[:port]/path/to/repo.git/
+        r"git://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
+        // => http[s]://host.xz[:port]/path/to/repo.git/
+        r"http(s?)://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
+        // => ftp[s]://host.xz[:port]/path/to/repo.git/
+        r"ftp(s?)://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
+        // => /path/to/repo.git/
+        r"/(.+?)(\.git(/)?)",
+        // => file:///path/to/repo.git/
+        r"file:///(.+?)(\.git(/)?)",
+    ];
 
-impl <'a> ScmProvier for GitScm<'a> {
+impl<'a> ScmProvier for GitScm<'a> {
     fn sugested_checkout_name(&self, url: &ScmUrl) -> Option<String> {
         return if self.handles_url(url) {
             compute_destination(url.clone())
@@ -82,10 +84,16 @@ fn compute_destination(url: ScmUrl) -> Option<String> {
     if let Some(index) = index {
         return Some(extract_directory(&(sanitized_url[(index)..])));
     }
-    
+
     return None;
 }
 
 fn extract_directory(last_path_chunk: &str) -> String {
-    return String::from(Path::new(last_path_chunk).file_stem().unwrap().to_str().unwrap());
+    return String::from(
+        Path::new(last_path_chunk)
+            .file_stem()
+            .unwrap()
+            .to_str()
+            .unwrap(),
+    );
 }

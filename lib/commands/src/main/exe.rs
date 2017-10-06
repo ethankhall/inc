@@ -1,8 +1,8 @@
 use std::env::{current_exe, var};
 use slog::{Logger, Level};
 use main::args::build_sub_command_args;
-use std::process::{Command};
-use std::collections::{HashMap};
+use std::process::Command;
+use std::collections::HashMap;
 use std::vec::Vec;
 use inc_core::core::BASE_APPLICATION_NAME;
 use inc_core::core::command::{LoggingContainer, MainCommand, CommandContainer};
@@ -10,15 +10,23 @@ use inc_core::core::config::ConfigContainer;
 use inc_core::libs::process::SystemCommand;
 use std::fmt::Write;
 
-pub struct MainEntryPoint {
-}
+pub struct MainEntryPoint {}
 
 impl MainCommand for MainEntryPoint {
-    fn execute(&self, args: Vec<String>, 
-        logging_container: &LoggingContainer, _config_container: &ConfigContainer, 
-        command_container: &CommandContainer) -> i32 {
-            return entrypoint(args, logging_container.logger, logging_container.level, &command_container.commands);
-        }
+    fn execute(
+        &self,
+        args: Vec<String>,
+        logging_container: &LoggingContainer,
+        _config_container: &ConfigContainer,
+        command_container: &CommandContainer,
+    ) -> i32 {
+        return entrypoint(
+            args,
+            logging_container.logger,
+            logging_container.level,
+            &command_container.commands,
+        );
+    }
 
     fn get_command_name(&self) -> String {
         return String::from(BASE_APPLICATION_NAME);
@@ -33,11 +41,13 @@ impl MainCommand for MainEntryPoint {
     }
 }
 
-fn entrypoint(args: Vec<String>, 
-        logger: &Logger,
-        log_level: &Level,
-        sub_commands: &HashMap<String, SystemCommand>) -> i32 {
-    
+fn entrypoint(
+    args: Vec<String>,
+    logger: &Logger,
+    log_level: &Level,
+    sub_commands: &HashMap<String, SystemCommand>,
+) -> i32 {
+
     let requested_command = build_sub_command_args(logger, args);
     let commands: Vec<&SystemCommand> = sub_commands.values().collect();
 
@@ -59,7 +69,9 @@ fn entrypoint(args: Vec<String>,
         return 0;
     }
 
-    let avaliable_command = commands.iter().find(|x| x.alias == requested_command.command);
+    let avaliable_command = commands.iter().find(
+        |x| x.alias == requested_command.command,
+    );
     if avaliable_command.is_none() {
         slog_warn!(logger, "Unknown command `{}`", requested_command.command);
         slog_info!(logger, "{}", help_message);
@@ -107,5 +119,5 @@ fn build_help(available_commands: &Vec<&SystemCommand>) -> String {
         write!(&mut help, "\t{}\n", command.alias).unwrap();
     }
 
-    return help
+    return help;
 }

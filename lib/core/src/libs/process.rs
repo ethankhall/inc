@@ -8,13 +8,13 @@ use std::path::PathBuf;
 pub struct SystemCommand {
     pub binary: SystemBinary,
     pub alias: String,
-    pub sub_commands: Vec<SystemBinary>
+    pub sub_commands: Vec<SystemBinary>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct SystemBinary {
     pub path: PathBuf,
-    pub name: String
+    pub name: String,
 }
 
 #[derive(Debug, Clone)]
@@ -23,10 +23,14 @@ pub struct SubProcessArguments {
     pub arguments: Vec<String>,
 }
 
-pub fn run_command_with_output(logger: &Logger, log_level: Level, args: SubProcessArguments) -> Result<String, String> {
+pub fn run_command_with_output(
+    logger: &Logger,
+    log_level: Level,
+    args: SubProcessArguments,
+) -> Result<String, String> {
     slog_trace!(logger, "Trying to execute {:?}", args.command);
 
-    
+
     let mut command = Command::new(args.command.clone());
     let output = command
         .args(args.arguments)
@@ -34,8 +38,13 @@ pub fn run_command_with_output(logger: &Logger, log_level: Level, args: SubProce
         .env("PATH", build_path())
         .output()
         .expect("command failed to start");
+
     if !output.status.success() {
-        return Err(format!("Unable to run {:?} it returned {}", args.command, output.status));
+        return Err(format!(
+            "Unable to run {:?} it returned {}",
+            args.command,
+            output.status
+        ));
     }
 
     return Ok(String::from_utf8_lossy(&output.stdout).to_string());

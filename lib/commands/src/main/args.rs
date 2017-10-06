@@ -7,7 +7,10 @@ pub(crate) struct SubCommandArguments {
     pub(crate) arguments: LinkedList<String>,
 }
 
-pub(crate) fn build_sub_command_args(logger: &Logger, args: Vec<String>) -> Result<SubCommandArguments, &'static str> {
+pub(crate) fn build_sub_command_args(
+    logger: &Logger,
+    args: Vec<String>,
+) -> Result<SubCommandArguments, &'static str> {
     let mut arguments: LinkedList<String> = LinkedList::new();
     let mut command: Option<String> = None;
 

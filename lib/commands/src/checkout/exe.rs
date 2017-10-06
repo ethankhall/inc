@@ -20,7 +20,8 @@ struct Args {
 fn build_usage(default_service: String, service_options: Vec<String>) -> String {
     let service_options = service_options.join(", ");
 
-    return format!("Usage:
+    return format!(
+        "Usage:
     inc-checkout [--service=<service>] <repository> [<directory>]
     inc-checkout [--verbose=<level>] <repository> [<directory>]
     inc-checkout (-h | --help)
@@ -31,13 +32,17 @@ Flags:
     -V, --version    Prints version information
 
 Options:
-    -s, --service <service>    Where to checkout from. A lot of cases will be github. [ default: {default} ] [ options: {services} ]
+    -s, --service <service>    Where to checkout from. \
+A lot of cases will be github. [ default: {default} ] [ options: {services} ]
     -v, --verbose <verbose>    Sets the level of verbosity. [ default: 1 ]
 
 Args:
     <repository>    The (possibly remote) repository to clone from.
     <directory>     Clones a repository into a newly created directory.
-", default = default_service, services = service_options);
+",
+        default = default_service,
+        services = service_options
+    );
 }
 
 fn possible_checkout_sources(commands: &Vec<SystemBinary>) -> Vec<String> {
@@ -51,7 +56,9 @@ fn possible_checkout_sources(commands: &Vec<SystemBinary>) -> Vec<String> {
 
     for external_source in commands.into_iter() {
         if external_source.name.starts_with(service_prefix.as_str()) {
-            avaliable_sources.insert(String::from(&external_source.name[(service_prefix.len())..]));
+            avaliable_sources.insert(String::from(
+                &external_source.name[(service_prefix.len())..],
+            ));
         }
     }
 
@@ -61,32 +68,55 @@ fn possible_checkout_sources(commands: &Vec<SystemBinary>) -> Vec<String> {
 pub(crate) struct CheckoutCommand {}
 
 impl MainCommand for CheckoutCommand {
-    fn execute(&self, args: Vec<String>, logging_container: &LoggingContainer, config_container: &ConfigContainer, 
-        command_container: &CommandContainer) -> i32 {
-        
+    fn execute(
+        &self,
+        args: Vec<String>,
+        logging_container: &LoggingContainer,
+        config_container: &ConfigContainer,
+        command_container: &CommandContainer,
+    ) -> i32 {
+
         let logger = logging_container.logger;
 
         let sub_commands = match command_container.find_sub_commands(self.get_command_prefix()) {
             Some(value) => value.sub_commands,
-            None => Vec::new()
+            None => Vec::new(),
         };
 
         let service_options = possible_checkout_sources(&sub_commands);
         slog_trace!(logger, "Avaliable checout sources: {:?}", service_options);
 
-        let default_sources = config_container.get_from_source_default(String::from("checkout.default"), ConfigSource::Home, String::from(DEFAULT_CHECKOUT_SOURCE));
+        let default_sources = config_container.get_from_source_default(
+            String::from("checkout.default"),
+            ConfigSource::Home,
+            String::from(DEFAULT_CHECKOUT_SOURCE),
+        );
         let doc_opts: Args = Docopt::new(build_usage(default_sources, service_options))
             .and_then(|d| d.argv(args.into_iter()).parse())
             .and_then(|d| d.deserialize())
             .unwrap_or_else(|e| e.exit());
 
-        let service = doc_opts.flag_service.unwrap_or_else(|| { String::from(DEFAULT_CHECKOUT_SOURCE) });
+        let service = doc_opts.flag_service.unwrap_or_else(|| {
+            String::from(DEFAULT_CHECKOUT_SOURCE)
+        });
         let destination = doc_opts.arg_directory;
         let repository = doc_opts.arg_repository;
 
-        slog_debug!(logger, "Checking out {}, using {} to get url, into {:?}", repository, service, destination);
+        slog_debug!(
+            logger,
+            "Checking out {}, using {} to get url, into {:?}",
+            repository,
+            service,
+            destination
+        );
 
-        let url = build_url_from_service(&logger, logging_container.level.clone(), service, repository, &sub_commands);
+        let url = build_url_from_service(
+            &logger,
+            logging_container.level.clone(),
+            service,
+            repository,
+            &sub_commands,
+        );
         if let Err(e) = url {
             slog_debug!(logger, "Error building URL: {:?}", e);
             slog_error!(logger, "Unable to determine URL. Error: {:?}", e.error);

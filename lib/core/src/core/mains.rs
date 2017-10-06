@@ -13,9 +13,17 @@ pub fn sub_command_run<T: MainCommand>(args: Vec<String>, command: &T) -> i32 {
     let commands = find_commands_avalible(&logger);
 
     let command_conatiner = CommandContainer { commands: commands };
-    let logging_container = LoggingContainer { logger: &logger, level: &level};
-    
-    return command.execute(args, &logging_container, &config_container, &command_conatiner);
+    let logging_container = LoggingContainer {
+        logger: &logger,
+        level: &level,
+    };
+
+    return command.execute(
+        args,
+        &logging_container,
+        &config_container,
+        &command_conatiner,
+    );
 }
 
 pub fn root_main<T: MainCommand>(command: &T) -> i32 {

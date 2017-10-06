@@ -12,34 +12,42 @@ pub enum ConfigValue {
     Real(f64),
     Integer(i64),
     Boolean(bool),
-    Null
+    Null,
 }
 
 pub enum ConfigSource {
     Home,
-    WorkingDir
+    WorkingDir,
 }
 
 #[derive(Debug)]
 pub struct ConfigContainer {
     project_config: Vec<Yaml>,
-    home_config: Vec<Yaml>
+    home_config: Vec<Yaml>,
 }
 
 impl ConfigContainer {
     pub fn new() -> Self {
         let project_config: Vec<Yaml> = collapse_the_configs(search_up_for_config_files());
         let home_configs: Vec<Yaml> = collapse_the_configs(search_for_home_config());
-        return ConfigContainer { project_config: project_config, home_config: home_configs };
+        return ConfigContainer {
+            project_config: project_config,
+            home_config: home_configs,
+        };
     }
 
-    pub fn get_from_source_default(&self, path: String, source: ConfigSource, default: String) -> String {
+    pub fn get_from_source_default(
+        &self,
+        path: String,
+        source: ConfigSource,
+        default: String,
+    ) -> String {
         let result = self.get_from_source(path, source);
-        let result = result.unwrap_or_else(|_| { return ConfigValue::String(default.clone())});
+        let result = result.unwrap_or_else(|_| return ConfigValue::String(default.clone()));
 
         return match result {
             ConfigValue::String(value) => value,
-            _ => default
+            _ => default,
         };
     }
 
@@ -47,14 +55,18 @@ impl ConfigContainer {
         let result = self.get_from_source(path.clone(), ConfigSource::WorkingDir);
         return match result {
             Ok(val) => Ok(val),
-            Err(_) => self.get_from_source(path, ConfigSource::Home)
+            Err(_) => self.get_from_source(path, ConfigSource::Home),
         };
     }
 
-    pub fn get_from_source(&self, path: String, source: ConfigSource) -> Result<ConfigValue, String> {
+    pub fn get_from_source(
+        &self,
+        path: String,
+        source: ConfigSource,
+    ) -> Result<ConfigValue, String> {
         return match source {
             ConfigSource::WorkingDir => find_first_value(self.project_config.clone(), path),
-            ConfigSource::Home => find_first_value(self.home_config.clone(), path)
+            ConfigSource::Home => find_first_value(self.home_config.clone(), path),
         };
     }
 }
@@ -87,7 +99,11 @@ fn find_value(yaml: Yaml, path: String) -> Result<ConfigValue, String> {
 
         let next_yaml = hash.get(&Yaml::String(String::from(*key_part)));
         if let None = next_yaml {
-            return Err(format!("No key `{}.{}` found", seen_path.join("."), key_part))
+            return Err(format!(
+                "No key `{}.{}` found",
+                seen_path.join("."),
+                key_part
+            ));
         }
 
         current_yaml = next_yaml.unwrap();
@@ -103,12 +119,14 @@ fn find_value(yaml: Yaml, path: String) -> Result<ConfigValue, String> {
     seen_path.push(last_key);
 
     if !hash.contains_key(&last_key_value) {
-        return Err(String::from(format!("Yaml doesn't contain key {}", seen_path.join("."))));
+        return Err(String::from(
+            format!("Yaml doesn't contain key {}", seen_path.join(".")),
+        ));
     }
 
     return match pull_value(hash.get(&last_key_value).unwrap().clone()) {
         Ok(value) => Ok(value),
-        Err(e) => Err(format!("Unable to parse {}: `{}`", seen_path.join("."), e))
+        Err(e) => Err(format!("Unable to parse {}: `{}`", seen_path.join("."), e)),
     };
 }
 
@@ -119,17 +137,18 @@ fn pull_value(val: Yaml) -> Result<ConfigValue, &'static str> {
         Yaml::String(value) => Ok(ConfigValue::String(value)),
         Yaml::Boolean(value) => Ok(ConfigValue::Boolean(value)),
         Yaml::Array(value) => {
-            let arr = value.into_iter()
+            let arr = value
+                .into_iter()
                 .map(|x| pull_value(x.clone()))
                 .filter(|x| x.is_ok())
                 .map(|x| x.unwrap())
                 .collect();
             Ok(ConfigValue::Array(arr))
-        },
+        }
         Yaml::Null => Ok(ConfigValue::Null),
         Yaml::Hash(_) => Err("Unable pull value from Hash"),
-        _ => Err("Unable to parse type")
-    }
+        _ => Err("Unable to parse type"),
+    };
 }
 
 fn collapse_the_configs(config_files: Vec<PathBuf>) -> Vec<Yaml> {
@@ -137,11 +156,11 @@ fn collapse_the_configs(config_files: Vec<PathBuf>) -> Vec<Yaml> {
 
     for val in config_files {
         match parse_config_file(val) {
-            Some(confs) => { 
+            Some(confs) => {
                 for config in confs.into_iter() {
                     return_configs.push(config);
                 }
-            },
+            }
             _ => {}
         }
     }
@@ -152,11 +171,13 @@ fn collapse_the_configs(config_files: Vec<PathBuf>) -> Vec<Yaml> {
 fn parse_config_file(path: PathBuf) -> Option<Vec<Yaml>> {
     let mut file = File::open(path).expect("Unable to open the file");
     let mut contents = String::new();
-    file.read_to_string(&mut contents).expect("Unable to read the file");
-    
+    file.read_to_string(&mut contents).expect(
+        "Unable to read the file",
+    );
+
     return match YamlLoader::load_from_str(&*contents) {
         Ok(yaml) => Some(yaml),
-        Err(_) => None
+        Err(_) => None,
     };
 }
 
@@ -182,14 +203,14 @@ fn search_for_home_config() -> Vec<PathBuf> {
 
     let config_file = match home_dir() {
         Some(dir) => config_file(".", dir),
-        None => None
+        None => None,
     };
 
     match config_file {
         Some(path) => result.push(path),
         _ => {}
     }
-    
+
     return result;
 }
 
@@ -209,11 +230,11 @@ fn search_up_for_config_files() -> Vec<PathBuf> {
 
         match path.clone().parent() {
             Some(parent_path) => path = parent_path.to_path_buf(),
-            None => at_root = true
+            None => at_root = true,
         }
     }
 
-    return result;   
+    return result;
 }
 
 #[cfg(test)]
@@ -221,7 +242,7 @@ mod test {
     use std::env::set_current_dir;
     use std::path::PathBuf;
     use super::*;
-    
+
     #[test]
     fn test_get_values_from_config() {
         let mut d = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
@@ -235,33 +256,41 @@ mod test {
 
         assert!(parsed.len() == 2);
 
-        let result = find_value(parsed.get(0).unwrap().clone(), String::from("checkout.default"));
+        let result = find_value(
+            parsed.get(0).unwrap().clone(),
+            String::from("checkout.default"),
+        );
         match result {
             Ok(value) => assert!(value == ConfigValue::String(String::from("crom"))),
-            Err(e) => assert!(false, format!("Unable to get checkout.default. Error was `{}`", e))
+            Err(e) => {
+                assert!(
+                    false,
+                    format!("Unable to get checkout.default. Error was `{}`", e)
+                )
+            }
         }
 
         let result = find_value(parsed.get(0).unwrap().clone(), String::from("integer"));
         match result {
             Ok(value) => assert!(value == ConfigValue::Integer(1)),
-            Err(e) => assert!(false, format!("Unable to get integer. Error was `{}`", e))
+            Err(e) => assert!(false, format!("Unable to get integer. Error was `{}`", e)),
         }
 
         let result = find_value(parsed.get(0).unwrap().clone(), String::from("array"));
         match result {
             Ok(value) => {
                 match value {
-                    ConfigValue::Array(_) => {},
-                    _ => assert!(false, "type was not array")
+                    ConfigValue::Array(_) => {}
+                    _ => assert!(false, "type was not array"),
                 }
             }
-            Err(e) => assert!(false, format!("Unable to get array. Error was `{}`", e))
+            Err(e) => assert!(false, format!("Unable to get array. Error was `{}`", e)),
         }
 
         let result = find_value(parsed.get(0).unwrap().clone(), String::from("null"));
         match result {
             Ok(value) => assert!(value == ConfigValue::Null),
-            Err(e) => assert!(false, format!("Unable to get null. Error was `{}`", e))
+            Err(e) => assert!(false, format!("Unable to get null. Error was `{}`", e)),
         }
     }
 

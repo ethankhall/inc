@@ -15,14 +15,16 @@ pub mod test_data {
         "ssh://ethall@host.xz/~ethall/path/to/repo.git/",
         "ssh://ethall@host.xz/~ethall/path/to/repo.git",
         "ssh://ethall@host.xz:111/~ethall/path/to/repo.git/",
-        "ssh://ethall@host.xz:111/~ethall/path/to/repo.git"];
+        "ssh://ethall@host.xz:111/~ethall/path/to/repo.git",
+    ];
 
     pub const GIT_URL_ARRAY: &'static [&'static str] = &[
         "git://host.xz/path/to/repo.git/",
         "git://host.xz/path/to/repo.git",
         "git://host.xz:111/path/to/repo.git/",
         "git://host.xz:111/path/to/repo.git",
-        "git://host.xz:to/repo.git",];
+        "git://host.xz:to/repo.git",
+    ];
 
     pub const HTTP_URL_ARRAY: &'static [&'static str] = &[
         "http://host.xz/path/to/repo.git/",
@@ -32,23 +34,27 @@ pub mod test_data {
         "https://host.xz/path/to/repo.git/",
         "https://host.xz/path/to/repo.git",
         "https://host.xz:222/path/to/repo.git/",
-        "https://host.xz:222/path/to/repo.git",];
+        "https://host.xz:222/path/to/repo.git",
+    ];
 
     pub const FTP_URL_ARRAY: &'static [&'static str] = &[
         "ftp://host.xz/path/to/repo.git/",
         "ftps://host.xz/path/to/repo.git/",
         "ftp://host.xz:222/path/to/repo.git/",
-        "ftps://host.xz:222/path/to/repo.git/",];
+        "ftps://host.xz:222/path/to/repo.git/",
+    ];
 
     pub const FILE_URL_ARRAY: &'static [&'static str] = &[
         "/path/to/repo.git",
         "/path/to/repo.git/",
         "file:///path/to/repo.git",
-        "file:///path/to/repo.git/",];
+        "file:///path/to/repo.git/",
+    ];
 
     pub const CUSTOM_URLS_ARRAY: &'static [&'static str] = &[
         "git@github.com:ethankhall/etrain.git",
-        "https://github.com/ethankhall/etrain.git"];
+        "https://github.com/ethankhall/etrain.git",
+    ];
 }
 
 #[cfg(test)]
