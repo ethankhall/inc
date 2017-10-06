@@ -1,17 +1,17 @@
-use std::collections::LinkedList;
+use std::vec::Vec;
 use slog::Logger;
 
 #[derive(Debug)]
 pub(crate) struct SubCommandArguments {
     pub(crate) command: String,
-    pub(crate) arguments: LinkedList<String>,
+    pub(crate) arguments: Vec<String>,
 }
 
 pub(crate) fn build_sub_command_args(
     logger: &Logger,
     args: Vec<String>,
 ) -> Result<SubCommandArguments, &'static str> {
-    let mut arguments: LinkedList<String> = LinkedList::new();
+    let mut arguments: Vec<String> = Vec::new();
     let mut command: Option<String> = None;
 
     let mut in_sub_command = false;
@@ -26,7 +26,7 @@ pub(crate) fn build_sub_command_args(
         };
 
         if in_sub_command {
-            arguments.push_back(argument.clone());
+            arguments.push(argument.clone());
         }
     }
 

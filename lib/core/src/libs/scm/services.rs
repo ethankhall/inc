@@ -1,6 +1,8 @@
 use libs::scm::{ScmUrl, ScmService, CheckoutError};
 use slog::{Logger, Level};
-use libs::process::{SubProcessArguments, run_command_with_output, SystemBinary};
+use libs::process::SystemBinary;
+use exec::system::OutputCapturingSystemExecution;
+use exec::executor::Executor;
 use std::collections::HashMap;
 use core::BASE_APPLICATION_NAME;
 
@@ -69,16 +71,17 @@ impl ExternalScmService {
 
 impl ScmService for ExternalScmService {
     fn generate_url(&self, user_input: String) -> Result<ScmUrl, CheckoutError> {
-
-        let args = SubProcessArguments {
-            command: self.binary.clone().path,
-            arguments: vec![user_input],
+        let executor = Executor { logger: self.logger.clone() };
+        let execution = OutputCapturingSystemExecution { 
+            command: self.binary.clone().path, 
+            log_level: self.log_level, 
+            logger: self.logger.clone() 
         };
-        let stdout = run_command_with_output(&(self.logger), self.log_level, args);
+        let result = executor.execute(&execution, &(vec![user_input]));
 
-        return match stdout {
-            Ok(value) => Ok(String::from(value.trim())),
-            Err(value) => Err(CheckoutError { error: value }),
+        return match result {
+            Ok(expr) => Ok(expr),
+            Err(value) => Err(CheckoutError { error: value } ),
         };
     }
 

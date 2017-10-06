@@ -12,6 +12,7 @@ extern crate docopt;
 use inc_core::core::command::MainCommand;
 use checkout::exe::CheckoutCommand;
 use main::exe::MainEntryPoint;
+use std::collections::HashMap;
 
 pub(crate) mod checkout;
 pub(crate) mod main;
@@ -21,5 +22,5 @@ pub fn build_checkout_command() -> impl MainCommand {
 }
 
 pub fn build_main_command() -> impl MainCommand {
-    return MainEntryPoint {};
+    return MainEntryPoint { internal_commands: HashMap::new() };
 }
