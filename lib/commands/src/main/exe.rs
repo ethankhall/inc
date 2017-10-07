@@ -28,8 +28,9 @@ impl MainCommand for MainEntryPoint {
         let help_command = HelpCommand::new(logger, &commands);
 
         let doc_opts: HelpArgs = Docopt::new(help_command.build_help_message())
-            .and_then(|d| d.argv(args.into_iter()).parse())
-            .and_then(|d| d.deserialize())
+            .and_then(|d| { 
+                d.options_first(true).help(false).argv(args.into_iter()).parse()
+            }).and_then(|d| d.deserialize())
             .unwrap_or_else(|e| e.exit());
 
         let executor = Executor::new(logger);

@@ -5,12 +5,13 @@ use std::vec::Vec;
 
 const HELP_COMMAND_MESSAGE: &'static str = "
 Usage:
-  inc [options] <command> [--] [args...]
+  inc [options] <command> [--] [<args>...]
   inc --version
+  inc --help
 
 Options:
   -h --help                 Show this screen.
-  -v <l>, --verbose=<l>     Speed in knots [default: 1]
+  -v <l>, --verbose=<l>     Enable more verbose output [default: 1]
   
 Commands:
   help
