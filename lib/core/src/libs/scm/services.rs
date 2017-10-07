@@ -71,7 +71,7 @@ impl ExternalScmService {
 
 impl ScmService for ExternalScmService {
     fn generate_url(&self, user_input: String) -> Result<ScmUrl, CheckoutError> {
-        let executor = Executor { logger: self.logger.clone() };
+        let executor = Executor::new(&self.logger);
         let execution = OutputCapturingSystemExecution { 
             command: self.binary.clone().path, 
             log_level: self.log_level, 

@@ -2,10 +2,11 @@ use inc_core::core::command::{MainCommand, CommandContainer, LoggingContainer};
 use inc_core::core::config::{ConfigContainer, ConfigSource};
 use inc_core::libs::scm::api::{build_url_from_service, checkout};
 use inc_core::core::BASE_APPLICATION_NAME;
-use std::collections::HashSet;
+use std::collections::{HashSet, HashMap};
 use docopt::Docopt;
 use inc_core::libs::scm::{PRE_DEFINED_CHECKOUT_SOURCES, DEFAULT_CHECKOUT_SOURCE};
 use inc_core::libs::process::SystemBinary;
+use inc_core::exec::Execution;
 
 #[derive(Deserialize, Debug)]
 struct Args {
@@ -74,6 +75,7 @@ impl MainCommand for CheckoutCommand {
         logging_container: &LoggingContainer,
         config_container: &ConfigContainer,
         command_container: &CommandContainer,
+        _buildin_commands: &HashMap<String, Box<Execution<i32>>>
     ) -> i32 {
 
         let logger = logging_container.logger;

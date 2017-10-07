@@ -1,14 +1,8 @@
 use core::config::ConfigContainer;
 use slog::{Logger, Level};
-use std::path::PathBuf;
 use std::collections::HashMap;
 use libs::process::SystemCommand;
-
-#[derive(Debug)]
-pub struct SubCommandLocation {
-    pub path: PathBuf,
-    pub name: String,
-}
+use exec::Execution;
 
 #[derive(Debug)]
 pub struct CommandContainer {
@@ -37,6 +31,7 @@ pub trait MainCommand {
         logging_container: &LoggingContainer,
         config_container: &ConfigContainer,
         command_container: &CommandContainer,
+        buildin_commands: &HashMap<String, Box<Execution<i32>>>
     ) -> i32;
     fn get_command_name(&self) -> String;
     fn get_command_prefix(&self) -> String;

@@ -1,14 +1,14 @@
-use main::args::build_sub_command_args;
 use std::collections::HashMap;
 use std::vec::Vec;
 use inc_core::core::BASE_APPLICATION_NAME;
 use inc_core::core::command::{LoggingContainer, MainCommand, CommandContainer};
 use inc_core::core::config::ConfigContainer;
 use inc_core::libs::process::SystemCommand;
-use std::fmt::Write;
 use inc_core::exec::system::SystemExecution;
 use inc_core::exec::executor::Executor;
 use inc_core::exec::Execution;
+use main::help::{HelpCommand, HelpArgs};
+use docopt::Docopt;
 
 pub struct MainEntryPoint {
     pub internal_commands: HashMap<String, Box<Execution<i32>>>
@@ -21,49 +21,59 @@ impl MainCommand for MainEntryPoint {
         logging_container: &LoggingContainer,
         _config_container: &ConfigContainer,
         command_container: &CommandContainer,
+        buildin_commands: &HashMap<String, Box<Execution<i32>>>
     ) -> i32 {
         let logger = logging_container.logger;
-        let requested_command = build_sub_command_args(logger, args);
         let commands: Vec<&SystemCommand> = command_container.commands.values().collect();
-        let help_message = build_help(&commands);
+        let help_command = HelpCommand::new(logger, &commands);
 
-        if let Err(value) = requested_command {
-            slog_warn!(logger, "{}", value);
-            slog_info!(logger, "{}", help_message);
-            return 1;
+        let doc_opts: HelpArgs = Docopt::new(help_command.build_help_message())
+            .and_then(|d| d.argv(args.into_iter()).parse())
+            .and_then(|d| d.deserialize())
+            .unwrap_or_else(|e| e.exit());
+
+        let executor = Executor::new(logger);
+
+        if doc_opts.arg_command == "help" {
+            slog_info!(logger, "{}", help_command.build_help_message());
+            return 0
         }
 
-        let requested_command = requested_command.unwrap();
-
-        if requested_command.command == "help" {
-            slog_info!(logger, "{}", help_message);
-            return 0;
-        }
-
-        let avaliable_command = commands.iter().find(
-            |x| x.alias == requested_command.command,
+        let command_search = commands.iter().find(
+            |x| x.alias == doc_opts.arg_command,
         );
-        if avaliable_command.is_none() {
-            slog_warn!(logger, "Unknown command `{}`", requested_command.command);
-            slog_info!(logger, "{}", help_message);
-            return 1;
+
+        let args = doc_opts.arg_args.unwrap_or_else(|| Vec::new());
+        if let Some(system_command) = command_search {
+            let command = SystemExecution { 
+                command: system_command.binary.clone().path, 
+                log_level: logging_container.level.clone(), 
+                logger: logger.clone() 
+            };
+
+            let result = executor.execute(&command, &args);
+
+            return match result {
+                Ok(expr) => expr,
+                Err(_) => -1
+            };
         }
 
-        let avaliable_command = avaliable_command.unwrap();
+        match buildin_commands.get(doc_opts.arg_command.as_str()) {
+            Some(execution) => {
+                let result = executor.execute(execution.as_ref(), &args);
 
-        let executor = Executor { logger: logger.clone() };
-        let execution = SystemExecution { 
-            command: avaliable_command.binary.clone().path, 
-            log_level: logging_container.level.clone(), 
-            logger: logger.clone() 
-        };
-        
-        let result = executor.execute(&execution, &(requested_command.arguments));
-
-        return match result {
-            Ok(expr) => expr,
-            Err(_) => -1
-        };
+                return match result {
+                    Ok(expr) => expr,
+                    Err(_) => -1
+                };
+            }
+            None => {
+                slog_warn!(logger, "Unknown command `{}`", doc_opts.arg_command);
+                slog_warn!(logger, "Run `{} help` for a list of commands", BASE_APPLICATION_NAME);
+                return 1;
+            }
+        }
     }
 
     fn get_command_name(&self) -> String {
@@ -77,16 +87,4 @@ impl MainCommand for MainEntryPoint {
     fn get_description(&self) -> String {
         return String::from("Command that delegates to other sub-commands");
     }
-}
-
-fn build_help(available_commands: &Vec<&SystemCommand>) -> String {
-    let mut help = String::new();
-    write!(&mut help, "usage: inc [--verbose (-v)] <command> <args>\n").unwrap();
-    write!(&mut help, "Available commands:\n").unwrap();
-
-    for command in available_commands.iter() {
-        write!(&mut help, "\t{}\n", command.alias).unwrap();
-    }
-
-    return help;
 }
