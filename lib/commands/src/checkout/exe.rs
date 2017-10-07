@@ -75,7 +75,7 @@ impl MainCommand for CheckoutCommand {
         logging_container: &LoggingContainer,
         config_container: &ConfigContainer,
         command_container: &CommandContainer,
-        _buildin_commands: &HashMap<String, Box<Execution<i32>>>
+        _buildin_commands: &HashMap<String, Box<Execution<i32>>>,
     ) -> i32 {
 
         let logger = logging_container.logger;

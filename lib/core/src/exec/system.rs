@@ -1,4 +1,4 @@
-use exec::{Execution};
+use exec::Execution;
 use std::path::PathBuf;
 use slog::{Level, Logger};
 use std::env::{current_exe, var};
@@ -28,7 +28,7 @@ impl Execution<i32> for SystemExecution {
 
         return match output {
             Ok(code) => Ok(code.code().unwrap_or_else(|| 0)),
-            Err(value) => Err(format!("Unable to run {:?} it returned {}", args, value))
+            Err(value) => Err(format!("Unable to run {:?} it returned {}", args, value)),
         };
     }
 }
@@ -48,7 +48,7 @@ impl Execution<String> for OutputCapturingSystemExecution {
             .args(args)
             .envs(build_env_updates(self.log_level))
             .output();
-    
+
         if let Err(value) = output {
             return Err(format!("Unable to execute command: {}", value));
         }
@@ -75,7 +75,10 @@ impl Execution<String> for OutputCapturingSystemExecution {
 
 fn build_env_updates(log_level: Level) -> HashMap<String, String> {
     let mut results: HashMap<String, String> = HashMap::new();
-    results.insert(String::from("INC_LOG_LEVEL"), String::from(log_level.as_str()));
+    results.insert(
+        String::from("INC_LOG_LEVEL"),
+        String::from(log_level.as_str()),
+    );
     results.insert(String::from("PATH"), build_path());
 
     return results;

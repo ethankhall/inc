@@ -11,7 +11,7 @@ use main::help::{HelpCommand, HelpArgs};
 use docopt::Docopt;
 
 pub struct MainEntryPoint {
-    pub internal_commands: HashMap<String, Box<Execution<i32>>>
+    pub internal_commands: HashMap<String, Box<Execution<i32>>>,
 }
 
 impl MainCommand for MainEntryPoint {
@@ -21,7 +21,7 @@ impl MainCommand for MainEntryPoint {
         logging_container: &LoggingContainer,
         _config_container: &ConfigContainer,
         command_container: &CommandContainer,
-        buildin_commands: &HashMap<String, Box<Execution<i32>>>
+        buildin_commands: &HashMap<String, Box<Execution<i32>>>,
     ) -> i32 {
         let logger = logging_container.logger;
         let commands: Vec<&SystemCommand> = command_container.commands.values().collect();
@@ -36,26 +36,24 @@ impl MainCommand for MainEntryPoint {
 
         if doc_opts.arg_command == "help" {
             slog_info!(logger, "{}", help_command.build_help_message());
-            return 0
+            return 0;
         }
 
-        let command_search = commands.iter().find(
-            |x| x.alias == doc_opts.arg_command,
-        );
+        let command_search = commands.iter().find(|x| x.alias == doc_opts.arg_command);
 
         let args = doc_opts.arg_args.unwrap_or_else(|| Vec::new());
         if let Some(system_command) = command_search {
-            let command = SystemExecution { 
-                command: system_command.binary.clone().path, 
-                log_level: logging_container.level.clone(), 
-                logger: logger.clone() 
+            let command = SystemExecution {
+                command: system_command.binary.clone().path,
+                log_level: logging_container.level.clone(),
+                logger: logger.clone(),
             };
 
             let result = executor.execute(&command, &args);
 
             return match result {
                 Ok(expr) => expr,
-                Err(_) => -1
+                Err(_) => -1,
             };
         }
 
@@ -65,12 +63,16 @@ impl MainCommand for MainEntryPoint {
 
                 return match result {
                     Ok(expr) => expr,
-                    Err(_) => -1
+                    Err(_) => -1,
                 };
             }
             None => {
                 slog_warn!(logger, "Unknown command `{}`", doc_opts.arg_command);
-                slog_warn!(logger, "Run `{} help` for a list of commands", BASE_APPLICATION_NAME);
+                slog_warn!(
+                    logger,
+                    "Run `{} help` for a list of commands",
+                    BASE_APPLICATION_NAME
+                );
                 return 1;
             }
         }

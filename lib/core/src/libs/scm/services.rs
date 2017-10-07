@@ -72,16 +72,16 @@ impl ExternalScmService {
 impl ScmService for ExternalScmService {
     fn generate_url(&self, user_input: String) -> Result<ScmUrl, CheckoutError> {
         let executor = Executor::new(&self.logger);
-        let execution = OutputCapturingSystemExecution { 
-            command: self.binary.clone().path, 
-            log_level: self.log_level, 
-            logger: self.logger.clone() 
+        let execution = OutputCapturingSystemExecution {
+            command: self.binary.clone().path,
+            log_level: self.log_level,
+            logger: self.logger.clone(),
         };
         let result = executor.execute(&execution, &(vec![user_input]));
 
         return match result {
             Ok(expr) => Ok(expr),
-            Err(value) => Err(CheckoutError { error: value } ),
+            Err(value) => Err(CheckoutError { error: value }),
         };
     }
 
