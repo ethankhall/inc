@@ -1,32 +1,26 @@
-use core::command::{MainCommand, CommandContainer, LoggingContainer};
-use core::cli::find_commands_avalible;
-use core::logging::{get_verbosity_level, logging};
-use core::config::ConfigContainer;
+use inc_core::core::command::{MainCommand, CommandContainer};
+use inc_core::core::cli::find_commands_avalible;
+use logging::{parse_from_args, configure_logging};
+use inc_core::core::config::ConfigContainer;
 use std::vec::Vec;
 use std::env::args;
 use std::collections::HashMap;
-use exec::Execution;
+use inc_core::exec::Execution;
 
 pub fn sub_command_run<T: MainCommand>(
     args: Vec<String>,
     command: &T,
     baked_commands: HashMap<String, Box<Execution<i32>>>,
 ) -> i32 {
-    let name = command.get_command_name();
-    let level = get_verbosity_level();
-    let logger = logging(level, &name);
+    let level = parse_from_args(&args);
+    configure_logging(Some(level));
     let config_container = ConfigContainer::new();
-    let commands = find_commands_avalible(&logger);
+    let commands = find_commands_avalible();
 
     let command_conatiner = CommandContainer { commands: commands };
-    let logging_container = LoggingContainer {
-        logger: &logger,
-        level: &level,
-    };
 
     return command.execute(
         args,
-        &logging_container,
         &config_container,
         &command_conatiner,
         &baked_commands,

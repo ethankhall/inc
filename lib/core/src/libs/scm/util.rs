@@ -1,10 +1,8 @@
-use slog::Logger;
 use std::path::{Path, PathBuf};
 use std::env::current_dir;
 use names::Generator;
 
 pub(crate) fn compute_destination(
-    logger: &Logger,
     destination: Option<String>,
     suggested_name: Option<String>,
 ) -> PathBuf {
@@ -18,8 +16,7 @@ pub(crate) fn compute_destination(
     }
 
     let project_name = Generator::default().next().unwrap();
-    slog_info!(
-        logger,
+    info!(
         "Unable to determine a project name, using {}.",
         project_name
     );

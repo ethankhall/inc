@@ -1,9 +1,8 @@
 use inc_core::exec::Execution;
 use inc_core::libs::process::SystemCommand;
-use slog::Logger;
 use std::vec::Vec;
 
-const HELP_COMMAND_MESSAGE: &'static str = "
+const HELP_COMMAND_MESSAGE: &'static str = "\
 Usage:
   inc [options] <command> [--] [<args>...]
   inc --version
@@ -28,15 +27,13 @@ pub(crate) struct HelpArgs {
 }
 
 pub struct HelpCommand {
-    logger: Logger,
     commands: Vec<String>,
 }
 
 impl HelpCommand {
-    pub fn new(logger: &Logger, commands: &Vec<&SystemCommand>) -> Self {
+    pub fn new(commands: &Vec<&SystemCommand>) -> Self {
         let commands = commands.iter().map(|x| x.alias.clone()).collect();
         HelpCommand {
-            logger: logger.new(o!()),
             commands: commands,
         }
     }
@@ -55,7 +52,7 @@ impl Execution<()> for HelpCommand {
     fn execute(&self, _args: &Vec<String>) -> Result<(), String> {
 
         let help_message = self.build_help_message();
-        slog_info!(self.logger, "{}", help_message);
+        info!("{}", help_message);
 
         return Ok(());
     }

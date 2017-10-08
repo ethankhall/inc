@@ -1,4 +1,4 @@
-use inc_core::core::command::{MainCommand, CommandContainer, LoggingContainer};
+use inc_core::core::command::{MainCommand, CommandContainer};
 use inc_core::core::config::{ConfigContainer, ConfigSource};
 use inc_core::libs::scm::api::{build_url_from_service, checkout};
 use inc_core::core::BASE_APPLICATION_NAME;
@@ -72,13 +72,10 @@ impl MainCommand for CheckoutCommand {
     fn execute(
         &self,
         args: Vec<String>,
-        logging_container: &LoggingContainer,
         config_container: &ConfigContainer,
         command_container: &CommandContainer,
         _buildin_commands: &HashMap<String, Box<Execution<i32>>>,
     ) -> i32 {
-
-        let logger = logging_container.logger;
 
         let sub_commands = match command_container.find_sub_commands(self.get_command_prefix()) {
             Some(value) => value.sub_commands,
@@ -86,7 +83,7 @@ impl MainCommand for CheckoutCommand {
         };
 
         let service_options = possible_checkout_sources(&sub_commands);
-        slog_trace!(logger, "Avaliable checout sources: {:?}", service_options);
+        trace!("Avaliable checout sources: {:?}", service_options);
 
         let default_sources = config_container.get_from_source_default(
             String::from("checkout.default"),
@@ -104,8 +101,7 @@ impl MainCommand for CheckoutCommand {
         let destination = doc_opts.arg_directory;
         let repository = doc_opts.arg_repository;
 
-        slog_debug!(
-            logger,
+        debug!(
             "Checking out {}, using {} to get url, into {:?}",
             repository,
             service,
@@ -113,25 +109,23 @@ impl MainCommand for CheckoutCommand {
         );
 
         let url = build_url_from_service(
-            &logger,
-            logging_container.level.clone(),
             service,
             repository,
             &sub_commands,
         );
         if let Err(e) = url {
-            slog_debug!(logger, "Error building URL: {:?}", e);
-            slog_error!(logger, "Unable to determine URL. Error: {:?}", e.error);
+            debug!("Error building URL: {:?}", e);
+            error!("Unable to determine URL. Error: {:?}", e.error);
             return 2;
         }
 
         let url = url.unwrap();
 
-        slog_debug!(logger, "Url to checkout is: {:?}", url);
+        debug!("Url to checkout is: {:?}", url);
 
-        let result = checkout(&logger, url, destination);
+        let result = checkout(url, destination);
 
-        slog_trace!(logger, "Results from checkout: {:?}", result);
+        trace!("Results from checkout: {:?}", result);
 
         return match result {
             Ok(value) => value,

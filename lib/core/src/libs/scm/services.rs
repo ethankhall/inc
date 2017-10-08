@@ -1,16 +1,11 @@
 use libs::scm::{ScmUrl, ScmService, CheckoutError};
-use slog::{Logger, Level};
 use libs::process::SystemBinary;
 use exec::system::OutputCapturingSystemExecution;
 use exec::executor::Executor;
 use std::collections::HashMap;
 use core::BASE_APPLICATION_NAME;
 
-pub fn build_service_map(
-    logger: &Logger,
-    log_level: Level,
-    sub_commands: &Vec<SystemBinary>,
-) -> HashMap<String, Box<ScmService>> {
+pub fn build_service_map(sub_commands: &Vec<SystemBinary>,) -> HashMap<String, Box<ScmService>> {
     let mut result: HashMap<String, Box<ScmService>> = HashMap::new();
     result.insert(String::from("github"), Box::new(GitHubScmService {}));
 
@@ -20,8 +15,6 @@ pub fn build_service_map(
         if external_source.name.starts_with(service_prefix.as_str()) {
             let service_name = String::from(&external_source.name[(service_prefix.len())..]);
             let service = ExternalScmService::new(
-                logger.clone(),
-                log_level,
                 external_source.clone(),
                 service_name.clone(),
             );
@@ -47,22 +40,16 @@ impl ScmService for GitHubScmService {
 }
 
 struct ExternalScmService {
-    pub logger: Logger,
-    pub log_level: Level,
     pub binary: SystemBinary,
     pub service_name: String,
 }
 
 impl ExternalScmService {
     fn new(
-        logger: Logger,
-        level: Level,
         binary: SystemBinary,
         service_name: String,
     ) -> ExternalScmService {
         ExternalScmService {
-            logger: logger,
-            log_level: level,
             binary: binary,
             service_name: service_name,
         }
@@ -71,11 +58,9 @@ impl ExternalScmService {
 
 impl ScmService for ExternalScmService {
     fn generate_url(&self, user_input: String) -> Result<ScmUrl, CheckoutError> {
-        let executor = Executor::new(&self.logger);
+        let executor = Executor::new();
         let execution = OutputCapturingSystemExecution {
             command: self.binary.clone().path,
-            log_level: self.log_level,
-            logger: self.logger.clone(),
         };
         let result = executor.execute(&execution, &(vec![user_input]));
 

@@ -1,4 +1,3 @@
-use slog::Logger;
 use std::collections::LinkedList;
 use std::process::Command;
 use std::path::Path;
@@ -7,8 +6,7 @@ use regex::RegexSet;
 use url::Url;
 
 #[derive(Debug, Clone)]
-pub struct GitScm<'a> {
-    pub logger: &'a Logger,
+pub struct GitScm {
 }
 
 pub(crate) const GIT_URL_REGEX: &'static [&'static str] =
@@ -27,7 +25,7 @@ pub(crate) const GIT_URL_REGEX: &'static [&'static str] =
         r"file:///(.+?)(\.git(/)?)",
     ];
 
-impl<'a> ScmProvier for GitScm<'a> {
+impl ScmProvier for GitScm {
     fn sugested_checkout_name(&self, url: &ScmUrl) -> Option<String> {
         return if self.handles_url(url) {
             compute_destination(url.clone())
@@ -42,7 +40,7 @@ impl<'a> ScmProvier for GitScm<'a> {
         args.push_back(url.clone());
         args.push_back((*destination).to_str().unwrap().to_string());
 
-        slog_trace!(self.logger, "About to execute {:?}", args);
+        trace!("About to execute {:?}", args);
         let mut git_command = Command::new("git").args(args).spawn().expect(
             "failed to execute process",
         );
@@ -58,7 +56,7 @@ impl<'a> ScmProvier for GitScm<'a> {
     fn handles_url(&self, url: &ScmUrl) -> bool {
         let regex_set = RegexSet::new(GIT_URL_REGEX).unwrap();
         let matches = regex_set.matches(url.as_str()).matched_any();
-        slog_debug!(self.logger, "GIT: `{}` is a git url? => {}", url, matches);
+        debug!("GIT: `{}` is a git url? => {}", url, matches);
         return matches;
     }
 }

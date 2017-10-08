@@ -1,14 +1,11 @@
-extern crate slog;
-
 use std::collections::{HashSet, HashMap};
 use std::env::{self, current_exe};
 use std::fs::{self, DirEntry, ReadDir};
-use slog::Logger;
 use core::BASE_APPLICATION_NAME;
 use libs::process::{SystemBinary, SystemCommand};
 
-pub fn find_commands_avalible(logger: &Logger) -> HashMap<String, SystemCommand> {
-    let commands = find_commands(logger);
+pub fn find_commands_avalible() -> HashMap<String, SystemCommand> {
+    let commands = find_commands();
     return convert_command_set_to_map(commands);
 }
 
@@ -135,19 +132,18 @@ mod test {
     }
 }
 
-fn find_commands(logger: &Logger) -> HashSet<SystemBinary> {
+fn find_commands() -> HashSet<SystemBinary> {
     let mut sub_commands: HashSet<SystemBinary> = HashSet::new();
 
     if let Ok(path) = env::var("PATH") {
         for split_path in path.split(":") {
             debug!(
-                logger,
                 "Processing {} for {} executables",
                 split_path,
                 BASE_APPLICATION_NAME
             );
             for entry in fs::read_dir(split_path) {
-                process_dir_read(logger, &mut sub_commands, entry);
+                process_dir_read(&mut sub_commands, entry);
             }
         }
     }
@@ -157,37 +153,35 @@ fn find_commands(logger: &Logger) -> HashSet<SystemBinary> {
         path.pop();
         let path = path.as_path();
         debug!(
-            logger,
             "Processing {:?} for {:?} executables",
             BASE_APPLICATION_NAME,
             path
         );
         for entry in path.read_dir() {
-            process_dir_read(logger, &mut sub_commands, entry);
+            process_dir_read(&mut sub_commands, entry);
         }
     }
 
     return sub_commands;
 }
 
-fn process_dir_read(logger: &Logger, sub_commands: &mut HashSet<SystemBinary>, dir_read: ReadDir) {
+fn process_dir_read(sub_commands: &mut HashSet<SystemBinary>, dir_read: ReadDir) {
     for entry in dir_read {
         match entry {
-            Ok(ent) => process_dir_entry(logger, sub_commands, ent),
-            Err(_) => debug!(logger, "Unable to read dir"),
+            Ok(ent) => process_dir_entry(sub_commands, ent),
+            Err(_) => debug!("Unable to read dir"),
         }
     }
 }
 
 fn process_dir_entry(
-    logger: &Logger,
     sub_commands: &mut HashSet<SystemBinary>,
     dir_entry: DirEntry,
 ) {
     let file_name = dir_entry.file_name().into_string();
 
     if file_name.is_err() {
-        debug!(logger, "Unable to process entry");
+        debug!("Unable to process entry");
         return;
     }
 
@@ -207,7 +201,7 @@ fn process_dir_entry(
                 path: dir_entry.path(),
                 name: file_name.clone(),
             });
-            debug!(logger, "Found command {}", file_name);
+            debug!("Found command {}", file_name);
         }
     }
 }

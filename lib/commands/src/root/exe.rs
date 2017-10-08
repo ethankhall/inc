@@ -1,13 +1,13 @@
 use std::collections::HashMap;
 use std::vec::Vec;
 use inc_core::core::BASE_APPLICATION_NAME;
-use inc_core::core::command::{LoggingContainer, MainCommand, CommandContainer};
+use inc_core::core::command::{MainCommand, CommandContainer};
 use inc_core::core::config::ConfigContainer;
 use inc_core::libs::process::SystemCommand;
 use inc_core::exec::system::SystemExecution;
 use inc_core::exec::executor::Executor;
 use inc_core::exec::Execution;
-use main::help::{HelpCommand, HelpArgs};
+use root::help::{HelpCommand, HelpArgs};
 use docopt::Docopt;
 
 pub struct MainEntryPoint {
@@ -18,14 +18,12 @@ impl MainCommand for MainEntryPoint {
     fn execute(
         &self,
         args: Vec<String>,
-        logging_container: &LoggingContainer,
         _config_container: &ConfigContainer,
         command_container: &CommandContainer,
         buildin_commands: &HashMap<String, Box<Execution<i32>>>,
     ) -> i32 {
-        let logger = logging_container.logger;
         let commands: Vec<&SystemCommand> = command_container.commands.values().collect();
-        let help_command = HelpCommand::new(logger, &commands);
+        let help_command = HelpCommand::new(&commands);
 
         let doc_opts: HelpArgs = Docopt::new(help_command.build_help_message())
             .and_then(|d| { 
@@ -33,10 +31,10 @@ impl MainCommand for MainEntryPoint {
             }).and_then(|d| d.deserialize())
             .unwrap_or_else(|e| e.exit());
 
-        let executor = Executor::new(logger);
+        let executor = Executor::new();
 
-        if doc_opts.arg_command == "help" {
-            slog_info!(logger, "{}", help_command.build_help_message());
+        if doc_opts.arg_command == "help" || doc_opts.flag_help {
+            info!("{}", help_command.build_help_message());
             return 0;
         }
 
@@ -46,8 +44,6 @@ impl MainCommand for MainEntryPoint {
         if let Some(system_command) = command_search {
             let command = SystemExecution {
                 command: system_command.binary.clone().path,
-                log_level: logging_container.level.clone(),
-                logger: logger.clone(),
             };
 
             let result = executor.execute(&command, &args);
@@ -68,9 +64,8 @@ impl MainCommand for MainEntryPoint {
                 };
             }
             None => {
-                slog_warn!(logger, "Unknown command `{}`", doc_opts.arg_command);
-                slog_warn!(
-                    logger,
+                warn!("Unknown command `{}`", doc_opts.arg_command);
+                warn!(
                     "Run `{} help` for a list of commands",
                     BASE_APPLICATION_NAME
                 );

@@ -1,6 +1,5 @@
 use exec::Execution;
 use std::path::PathBuf;
-use slog::{Level, Logger};
 use std::env::{current_exe, var};
 use std::process::Command;
 use std::collections::HashMap;
@@ -8,8 +7,6 @@ use std::collections::HashMap;
 #[derive(Debug, Clone)]
 pub struct SystemExecution {
     pub command: PathBuf,
-    pub log_level: Level,
-    pub logger: Logger,
 }
 
 impl Execution<i32> for SystemExecution {
@@ -17,7 +14,7 @@ impl Execution<i32> for SystemExecution {
         let mut command = Command::new(self.command.clone());
         let swawn = command
             .args(args)
-            .envs(build_env_updates(self.log_level))
+            .envs(build_env_updates())
             .spawn();
 
         if let Err(value) = swawn {
@@ -36,17 +33,14 @@ impl Execution<i32> for SystemExecution {
 #[derive(Debug, Clone)]
 pub struct OutputCapturingSystemExecution {
     pub command: PathBuf,
-    pub log_level: Level,
-    pub logger: Logger,
 }
 
 impl Execution<String> for OutputCapturingSystemExecution {
     fn execute(&self, args: &Vec<String>) -> Result<String, String> {
-        let logger = &(self.logger);
         let mut command = Command::new(self.command.clone());
         let output = command
             .args(args)
-            .envs(build_env_updates(self.log_level))
+            .envs(build_env_updates())
             .output();
 
         if let Err(value) = output {
@@ -57,10 +51,10 @@ impl Execution<String> for OutputCapturingSystemExecution {
 
         if !output.status.success() {
             for line in String::from_utf8_lossy(&output.stdout).to_string().lines() {
-                slog_error!(logger, "OUT: {}", line);
+                error!("OUT: {}", line);
             }
             for line in String::from_utf8_lossy(&output.stderr).to_string().lines() {
-                slog_error!(logger, "ERR: {}", line);
+                error!("ERR: {}", line);
             }
             return Err(format!(
                 "Unable to run {:?} it returned {}",
@@ -73,12 +67,8 @@ impl Execution<String> for OutputCapturingSystemExecution {
     }
 }
 
-fn build_env_updates(log_level: Level) -> HashMap<String, String> {
+fn build_env_updates() -> HashMap<String, String> {
     let mut results: HashMap<String, String> = HashMap::new();
-    results.insert(
-        String::from("INC_LOG_LEVEL"),
-        String::from(log_level.as_str()),
-    );
     results.insert(String::from("PATH"), build_path());
 
     return results;
