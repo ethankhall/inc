@@ -10,8 +10,12 @@ use log::LogLevelFilter;
 pub const LOG_LEVEL_DEFINITION: &'static str = "INC_LOG_LEVEL";
 
 pub fn parse_from_args(args: &Vec<String>) -> IncLogLevel {
+    if let Ok(level) = var(LOG_LEVEL_DEFINITION) {
+        return level.parse().unwrap_or_else(|_| IncLogLevel::Trace);
+    }
+
     let mut verbose_level = 1;
-    for argument in args.into_iter() {
+    for argument in args.into_iter().skip(1) {
         if argument == "--verbose" {
             verbose_level = verbose_level + 1;
         }
@@ -68,12 +72,20 @@ pub fn configure_logging(logging_level: Option<IncLogLevel>) {
 }
 
 fn configure_logging_output(logging_level: LogLevelFilter, dispatch: Dispatch) -> Dispatch {
-    if logging_level == LogLevelFilter::Debug {
+    if logging_level == LogLevelFilter::Trace {
         return dispatch.format(|out, message, record| {
             out.finish(format_args!(
             "{}[{}][{}] {}",
-            Local::now().format("[%Y-%m-%d][%H:%M:%S]"),
+            Local::now().format("[%Y-%m-%d - %H:%M:%S]"),
             record.target(),
+            record.level(),
+            message))
+        });
+    } if logging_level == LogLevelFilter::Debug {
+        return dispatch.format(|out, message, record| {
+            out.finish(format_args!(
+            "{}[{}] {}",
+            Local::now().format("[%Y-%m-%d - %H:%M:%S]"),
             record.level(),
             message))
         });

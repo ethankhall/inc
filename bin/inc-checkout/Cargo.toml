@@ -1,8 +1,0 @@
-[package]
-name = "etrain-checkout"
-version = "0.1.0"
-authors = ["Ethan Hall <ethan@ehdev.io>"]
-
-[dependencies]
-inc-core = { version = "0.1.0", path = "../../lib/core" }
-inc-commands = { version = "0.1.0", path = "../../lib/commands" }

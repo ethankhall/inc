@@ -1,8 +1,9 @@
 extern crate inc_core;
 extern crate inc_commands;
 
-use inc_commands::build_main_command;
-use inc_commands::mains::root_main;
+use inc_commands::build_fat_main_command;
+use inc_commands::mains::sub_command_run;
+use std::env::args;
 use std::process;
 
 fn main() {
@@ -11,6 +12,5 @@ fn main() {
 }
 
 fn do_main() -> i32 {
-    let command = build_main_command();
-    return root_main(&command);
+    return sub_command_run(args().collect(), |config, command| { Box::new(build_fat_main_command(config, command)) });
 }

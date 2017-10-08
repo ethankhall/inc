@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::vec::Vec;
 use inc_core::core::BASE_APPLICATION_NAME;
 use inc_core::core::command::{MainCommand, CommandContainer};
-use inc_core::core::config::ConfigContainer;
 use inc_core::libs::process::SystemCommand;
 use inc_core::exec::system::SystemExecution;
 use inc_core::exec::executor::Executor;
@@ -12,17 +11,12 @@ use docopt::Docopt;
 
 pub struct MainEntryPoint {
     pub internal_commands: HashMap<String, Box<Execution<i32>>>,
+    pub command_container: CommandContainer
 }
 
 impl MainCommand for MainEntryPoint {
-    fn execute(
-        &self,
-        args: Vec<String>,
-        _config_container: &ConfigContainer,
-        command_container: &CommandContainer,
-        buildin_commands: &HashMap<String, Box<Execution<i32>>>,
-    ) -> i32 {
-        let commands: Vec<&SystemCommand> = command_container.commands.values().collect();
+    fn execute(&self, args: &Vec<String>) -> i32 {
+        let commands: Vec<&SystemCommand> = self.command_container.commands.values().collect();
         let help_command = HelpCommand::new(&commands);
 
         let doc_opts: HelpArgs = Docopt::new(help_command.build_help_message())
@@ -54,7 +48,7 @@ impl MainCommand for MainEntryPoint {
             };
         }
 
-        match buildin_commands.get(doc_opts.arg_command.as_str()) {
+        match self.internal_commands.get(doc_opts.arg_command.as_str()) {
             Some(execution) => {
                 let result = executor.execute(execution.as_ref(), &args);
 

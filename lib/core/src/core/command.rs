@@ -1,9 +1,7 @@
-use core::config::ConfigContainer;
 use std::collections::HashMap;
 use libs::process::SystemCommand;
-use exec::Execution;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct CommandContainer {
     pub commands: HashMap<String, SystemCommand>,
 }
@@ -18,13 +16,7 @@ impl CommandContainer {
 }
 
 pub trait MainCommand {
-    fn execute(
-        &self,
-        args: Vec<String>,
-        config_container: &ConfigContainer,
-        command_container: &CommandContainer,
-        buildin_commands: &HashMap<String, Box<Execution<i32>>>,
-    ) -> i32;
+    fn execute(&self, args: &Vec<String>) -> i32;
     fn get_command_name(&self) -> String;
     fn get_command_prefix(&self) -> String;
     fn get_description(&self) -> String;

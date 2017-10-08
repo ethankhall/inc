@@ -2,7 +2,7 @@ use inc_core::core::command::{MainCommand, CommandContainer};
 use inc_core::core::config::{ConfigContainer, ConfigSource};
 use inc_core::libs::scm::api::{build_url_from_service, checkout};
 use inc_core::core::BASE_APPLICATION_NAME;
-use std::collections::{HashSet, HashMap};
+use std::collections::HashSet;
 use docopt::Docopt;
 use inc_core::libs::scm::{PRE_DEFINED_CHECKOUT_SOURCES, DEFAULT_CHECKOUT_SOURCE};
 use inc_core::libs::process::SystemBinary;
@@ -23,8 +23,7 @@ fn build_usage(default_service: String, service_options: Vec<String>) -> String 
 
     return format!(
         "Usage:
-    inc-checkout [--service=<service>] <repository> [<directory>]
-    inc-checkout [--verbose=<level>] <repository> [<directory>]
+    inc-checkout [<options>] <repository> [<directory>]
     inc-checkout (-h | --help)
     inc-checkout (-V | --version)
 
@@ -35,7 +34,7 @@ Flags:
 Options:
     -s, --service <service>    Where to checkout from. \
 A lot of cases will be github. [ default: {default} ] [ options: {services} ]
-    -v, --verbose <verbose>    Sets the level of verbosity. [ default: 1 ]
+    -v <level>, --verbose=<level>    Sets the level of verbosity. [ default: 1 ]
 
 Args:
     <repository>    The (possibly remote) repository to clone from.
@@ -66,18 +65,15 @@ fn possible_checkout_sources(commands: &Vec<SystemBinary>) -> Vec<String> {
     return avaliable_sources.into_iter().collect();
 }
 
-pub(crate) struct CheckoutCommand {}
+pub struct CheckoutCommand {
+    pub config_container: ConfigContainer,
+    pub command_container: CommandContainer
+}
 
-impl MainCommand for CheckoutCommand {
-    fn execute(
-        &self,
-        args: Vec<String>,
-        config_container: &ConfigContainer,
-        command_container: &CommandContainer,
-        _buildin_commands: &HashMap<String, Box<Execution<i32>>>,
-    ) -> i32 {
+impl CheckoutCommand {
+    fn my_execute(&self, args: &Vec<String>) -> i32 {
 
-        let sub_commands = match command_container.find_sub_commands(self.get_command_prefix()) {
+        let sub_commands = match self.command_container.find_sub_commands(self.get_command_prefix()) {
             Some(value) => value.sub_commands,
             None => Vec::new(),
         };
@@ -85,7 +81,7 @@ impl MainCommand for CheckoutCommand {
         let service_options = possible_checkout_sources(&sub_commands);
         trace!("Avaliable checout sources: {:?}", service_options);
 
-        let default_sources = config_container.get_from_source_default(
+        let default_sources = self.config_container.get_from_source_default(
             String::from("checkout.default"),
             ConfigSource::Home,
             String::from(DEFAULT_CHECKOUT_SOURCE),
@@ -131,6 +127,18 @@ impl MainCommand for CheckoutCommand {
             Ok(value) => value,
             _ => 1,
         };
+    }
+}
+
+impl Execution<i32> for CheckoutCommand {
+    fn execute(&self, args: &Vec<String>) -> Result<i32, String> {
+        return Ok(self.my_execute(args));
+    }
+}
+
+impl MainCommand for CheckoutCommand {
+    fn execute(&self, args: &Vec<String>) -> i32 {
+        return self.my_execute(args);
     }
 
     fn get_command_name(&self) -> String {

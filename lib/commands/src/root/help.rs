@@ -10,7 +10,7 @@ Usage:
 
 Options:
   -h --help                 Show this screen.
-  -v <l>, --verbose=<l>     Enable more verbose output [default: 1]
+  -v=<l>, --verbose=<l>     Enable more verbose output [default: 1]
   
 Commands:
   help

@@ -66,14 +66,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "etrain-checkout"
-version = "0.1.0"
-dependencies = [
- "inc-commands 0.1.0",
- "inc-core 0.1.0",
-]
-
-[[package]]
 name = "fern"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
