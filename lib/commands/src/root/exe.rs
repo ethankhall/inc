@@ -17,7 +17,7 @@ pub struct MainEntryPoint {
 impl MainCommand for MainEntryPoint {
     fn execute(&self, args: &Vec<String>) -> i32 {
         let commands: Vec<&SystemCommand> = self.command_container.commands.values().collect();
-        let help_command = HelpCommand::new(&commands);
+        let help_command = HelpCommand::new(&commands, self.internal_commands.keys().collect());
 
         let doc_opts: HelpArgs = Docopt::new(help_command.build_help_message())
             .and_then(|d| { 

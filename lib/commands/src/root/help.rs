@@ -1,6 +1,7 @@
 use inc_core::exec::Execution;
 use inc_core::libs::process::SystemCommand;
 use std::vec::Vec;
+use std::collections::HashSet;
 
 const HELP_COMMAND_MESSAGE: &'static str = "\
 Usage:
@@ -14,8 +15,7 @@ Options:
   
 Commands:
   help
-{command_list}
-";
+{command_list}";
 
 #[derive(Deserialize, Debug)]
 pub(crate) struct HelpArgs {
@@ -27,14 +27,23 @@ pub(crate) struct HelpArgs {
 }
 
 pub struct HelpCommand {
-    commands: Vec<String>,
+    commands: Vec<String>
 }
 
 impl HelpCommand {
-    pub fn new(commands: &Vec<&SystemCommand>) -> Self {
-        let commands = commands.iter().map(|x| x.alias.clone()).collect();
+    pub fn new(commands: &Vec<&SystemCommand>, built_in: Vec<&String>) -> Self {
+        let mut command_set: HashSet<String> = HashSet::new();
+
+        for command in built_in.iter() {
+            command_set.insert((*command).clone());
+        }
+
+        for command in commands.iter() {
+            command_set.insert(command.alias.clone());
+        }
+
         HelpCommand {
-            commands: commands,
+            commands: command_set.into_iter().collect(),
         }
     }
 
