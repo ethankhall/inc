@@ -1,5 +1,5 @@
 [package]
-name = "etrain"
+name = "inc-bin"
 version = "0.1.0"
 authors = ["Ethan Hall <ethan@ehdev.io>"]
 
