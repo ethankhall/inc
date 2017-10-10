@@ -18,27 +18,25 @@ struct Args {
     flag_service: Option<String>,
 }
 
-fn build_usage(default_service: String, service_options: Vec<String>) -> String {
+fn build_usage(default_service: &String, service_options: Vec<String>) -> String {
     let service_options = service_options.join(", ");
 
     return format!(
-        "Usage:
-    inc-checkout [<options>] <repository> [<directory>]
-    inc-checkout (-h | --help)
-    inc-checkout (-V | --version)
-
-Flags:
-    -h, --help       Prints help information
-    -V, --version    Prints version information
+"Usage:
+  inc-checkout [options] <repository> [<directory>]
+  inc-checkout (-h | --help | --version)
 
 Options:
-    -s, --service <service>    Where to checkout from. \
+  -s <service>, --service=<service>    Where to checkout from. \
 A lot of cases will be github. [ default: {default} ] [ options: {services} ]
-    -v <level>, --verbose=<level>    Sets the level of verbosity. [ default: 1 ]
+  -v <level>, --verbose=<level>        Enable more verbose output [ default: 1 ]
+
+Flags:
+  -h, --help       Prints help information
 
 Args:
-    <repository>    The (possibly remote) repository to clone from.
-    <directory>     Clones a repository into a newly created directory.
+  <repository>    The (possibly remote) repository to clone from.
+  <directory>     Clones a repository into a newly created directory.
 ",
         default = default_service,
         services = service_options
@@ -73,6 +71,8 @@ pub struct CheckoutCommand {
 impl CheckoutCommand {
     fn my_execute(&self, args: &Vec<String>) -> i32 {
 
+        trace!("Arguments to checkout: {:?}", args);
+
         let sub_commands = match self.command_container.find_sub_commands(self.get_command_prefix()) {
             Some(value) => value.sub_commands,
             None => Vec::new(),
@@ -86,14 +86,13 @@ impl CheckoutCommand {
             ConfigSource::Home,
             String::from(DEFAULT_CHECKOUT_SOURCE),
         );
-        let doc_opts: Args = Docopt::new(build_usage(default_sources, service_options))
+
+        let doc_opts: Args = Docopt::new(build_usage(&default_sources, service_options))
             .and_then(|d| d.argv(args.into_iter()).parse())
             .and_then(|d| d.deserialize())
             .unwrap_or_else(|e| e.exit());
 
-        let service = doc_opts.flag_service.unwrap_or_else(|| {
-            String::from(DEFAULT_CHECKOUT_SOURCE)
-        });
+        let service = doc_opts.flag_service.unwrap_or_else(|| default_sources);
         let destination = doc_opts.arg_directory;
         let repository = doc_opts.arg_repository;
 
@@ -109,6 +108,7 @@ impl CheckoutCommand {
             repository,
             &sub_commands,
         );
+
         if let Err(e) = url {
             debug!("Error building URL: {:?}", e);
             error!("Unable to determine URL. Error: {:?}", e.error);
@@ -119,9 +119,12 @@ impl CheckoutCommand {
 
         debug!("Url to checkout is: {:?}", url);
 
-        let result = checkout(url, destination);
+        let result = checkout(&url, destination);
 
         trace!("Results from checkout: {:?}", result);
+        if result.is_err() {
+            error!("Unable to checkout from {:?}", url);
+        }
 
         return match result {
             Ok(value) => value,

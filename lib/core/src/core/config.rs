@@ -90,7 +90,6 @@ fn find_value(yaml: Yaml, path: String) -> Result<ConfigValue, String> {
     let mut seen_path: Vec<&str> = Vec::new();
 
     for key_part in split_path.iter() {
-        println!("{}", key_part);
         let hash = current_yaml.as_hash();
         if let None = hash {
             return Err(String::from("Yaml isn't a map"));

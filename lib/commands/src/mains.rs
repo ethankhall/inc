@@ -6,12 +6,13 @@ use std::vec::Vec;
 use std::env::args;
 
 pub fn sub_command_run<F>(
+    break_on_command: bool,
     args: Vec<String>,
     generator: F
 ) -> i32 
     where F: Fn(ConfigContainer, CommandContainer) -> Box<MainCommand> {
 
-    let level = parse_from_args(&args);
+    let level = parse_from_args(&args, break_on_command);
     configure_logging(Some(level));
 
     let config_container = ConfigContainer::new();
@@ -27,5 +28,5 @@ pub fn sub_command_run<F>(
 
 pub fn root_main<F>(generator: F) -> i32 
     where F: Fn(ConfigContainer, CommandContainer) -> Box<MainCommand> {
-    return sub_command_run(args().collect(), generator);
+    return sub_command_run(true, args().collect(), generator);
 }

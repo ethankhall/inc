@@ -9,25 +9,35 @@ use log::LogLevelFilter;
 
 pub const LOG_LEVEL_DEFINITION: &'static str = "INC_LOG_LEVEL";
 
-pub fn parse_from_args(args: &Vec<String>) -> IncLogLevel {
-    if let Ok(level) = var(LOG_LEVEL_DEFINITION) {
-        return level.parse().unwrap_or_else(|_| IncLogLevel::Trace);
-    }
-
-    let mut verbose_level = 1;
+pub fn parse_from_args(args: &Vec<String>, break_on_command: bool) -> IncLogLevel {
+    let mut verbose_level = 2;
+    let mut found_verbose = false;
+    let mut last_argument_is_v = false;
     for argument in args.into_iter().skip(1) {
+
+        if last_argument_is_v {
+            if let Ok(value) = argument.parse() {
+                verbose_level = value;
+            }
+        }
+
         if argument == "--verbose" {
             verbose_level = verbose_level + 1;
+            found_verbose = true;
+            last_argument_is_v = true;
         }
 
         if argument == "-v" {
             verbose_level = verbose_level + 1;
+            found_verbose = true;
+            last_argument_is_v = true;
         }
 
         if argument.starts_with("--verbose=") {
             if let Some(count) = argument.get(("--verbose=".len())..) {
                 if let Ok(value) = count.parse() {
                     verbose_level = value;
+                    found_verbose = true;
                 }
             }
         }
@@ -36,12 +46,19 @@ pub fn parse_from_args(args: &Vec<String>) -> IncLogLevel {
             if let Some(count) = argument.get(("-v=".len())..) {
                 if let Ok(value) = count.parse() {
                     verbose_level = value;
+                    found_verbose = true;
                 }
             }
         }
 
-        if !argument.starts_with("-") {
+        if break_on_command && !argument.starts_with("-") {
             break;
+        }
+    }
+
+    if !found_verbose {
+        if let Ok(level) = var(LOG_LEVEL_DEFINITION) {
+            return level.parse().unwrap_or_else(|_| IncLogLevel::Trace);
         }
     }
 
@@ -50,10 +67,11 @@ pub fn parse_from_args(args: &Vec<String>) -> IncLogLevel {
 
 fn log_level(number_of_verbose: u64) -> IncLogLevel {
     return match number_of_verbose {
-        0 => IncLogLevel::Warn,
-        1 => IncLogLevel::Info,
-        2 => IncLogLevel::Debug,
-        3 | _ => IncLogLevel::Trace,
+        0 => IncLogLevel::Error,
+        1 => IncLogLevel::Warn,
+        2 => IncLogLevel::Info,
+        3 => IncLogLevel::Debug,
+        4 | _ => IncLogLevel::Trace,
     };
 }
 

@@ -12,5 +12,5 @@ fn main() {
 }
 
 fn do_main() -> i32 {
-    return sub_command_run(args().collect(), |config, command| { Box::new(build_fat_main_command(config, command)) });
+    return sub_command_run(false, args().collect(), |config, command| { Box::new(build_fat_main_command(config, command)) });
 }

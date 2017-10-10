@@ -137,7 +137,7 @@ fn find_commands() -> HashSet<SystemBinary> {
 
     if let Ok(path) = env::var("PATH") {
         for split_path in path.split(":") {
-            debug!(
+            trace!(
                 "Processing {} for {} executables",
                 split_path,
                 BASE_APPLICATION_NAME
