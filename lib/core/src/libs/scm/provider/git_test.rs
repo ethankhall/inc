@@ -62,15 +62,13 @@ pub mod test {
     use libs::scm::provider::git::*;
     use libs::scm::{ScmProvier, ScmUrl};
     use super::test_data::*;
-    use slog::{Discard, Logger};
 
     macro_rules! is_git_url {
         ($($name:ident: $arguments:expr,)*) => {
         $(
             #[test]
             fn $name() {
-                let root = Logger::root(Discard, o!());
-                let git = GitScm { logger: &root };
+                let git = GitScm { };
                 for arg in $arguments.iter() {
                     assert!(git.handles_url(&ScmUrl::from(*arg)));
                 }
@@ -95,10 +93,9 @@ pub mod test {
             fn $name() {
                 for arg in $arguments.iter() {
                     let expected = String::from("repo");
-                    let root = Logger::root(Discard, o!());
                     let url = ScmUrl::from(*arg);
 
-                    let git = GitScm { logger: &root };
+                    let git = GitScm { };
                     let name = git.sugested_checkout_name(&url);
                     assert!(name.is_some(), "url didn't get parsed: {}", url.clone());
                     assert_eq!(name.unwrap(), expected, "parse url: {}", url.clone());
