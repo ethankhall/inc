@@ -6,7 +6,7 @@ extern crate regex;
 extern crate url;
 extern crate names;
 extern crate docopt;
-extern crate yaml_rust;
+extern crate toml;
 
 pub mod core;
 pub mod libs;

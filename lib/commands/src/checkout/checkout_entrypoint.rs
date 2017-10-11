@@ -1,5 +1,5 @@
 use inc_core::core::command::{MainCommand, CommandContainer};
-use inc_core::core::config::{ConfigContainer, ConfigSource};
+use inc_core::core::config::ConfigContainer;
 use inc_core::libs::scm::api::{build_url_from_service, checkout};
 use inc_core::core::BASE_APPLICATION_NAME;
 use std::collections::HashSet;
@@ -81,11 +81,10 @@ impl CheckoutCommand {
         let service_options = possible_checkout_sources(&sub_commands);
         trace!("Avaliable checout sources: {:?}", service_options);
 
-        let default_sources = self.config_container.get_from_source_default(
-            String::from("checkout.default"),
-            ConfigSource::Home,
-            String::from(DEFAULT_CHECKOUT_SOURCE),
-        );
+        let default_sources = self.config_container
+            .get_checkout_configs()
+            .default
+            .unwrap_or_else(|| String::from(DEFAULT_CHECKOUT_SOURCE));
 
         let doc_opts: Args = Docopt::new(build_usage(&default_sources, service_options))
             .and_then(|d| d.argv(args.into_iter()).parse())
