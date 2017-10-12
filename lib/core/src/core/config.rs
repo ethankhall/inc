@@ -5,23 +5,26 @@ use toml::value::Value;
 use toml::value::Table;
 use std::fs::File;
 use std::io::prelude::*;
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 
 #[derive(Debug, Clone)]
 pub struct ConfigContainer {
-    project_config: Vec<Value>,
-    home_config: Vec<Value>,
+    pub(crate) project_config: Vec<Value>,
+    pub(crate) home_config: Vec<Value>,
 }
 
+#[derive(Debug, Clone)]
 pub struct CheckoutConfig {
     pub default: Option<String>
 }
 
+#[derive(Debug, Clone)]
 pub struct ExecCommandConfig {
     pub commands: Option<Vec<String>>,
     pub ignore_failures: bool
 }
 
+#[derive(Debug, Clone)]
 pub struct ExecConfig {
     pub commands: HashMap<String, ExecCommandConfig>
 }
@@ -37,7 +40,7 @@ impl ConfigContainer {
     }
 
     pub fn get_exec_configs(&self) -> ExecConfig {
-        let command_map: HashMap<String, ExecCommandConfig> = HashMap::new();
+        let mut command_map: HashMap<String, ExecCommandConfig> = HashMap::new();
         for config in self.project_config.clone().into_iter() {
             debug!("Processing new config entry");
             let config_entry = config.get("exec");
@@ -50,46 +53,15 @@ impl ConfigContainer {
                 continue;
             }
 
-            let config_entry = config_entry.unwrap();
-            for config_key in config_entry.keys() {
-                if command_map.contains_key(config_key) {
-                    continue;
+            let prased_results = prase_exec_table(config_entry);
+            for (key, value) in prased_results.into_iter() {
+                if !command_map.contains_key(&key) {
+                    command_map.insert(key, value);
                 }
-
-                let command_entry = config_entry.get(config_key).unwrap();
-                let command_table = command_entry.as_table();
-                if command_table.is_none() {
-                    debug!("{} was not a table, but instead was {}", config_key, command_entry.type_str());
-                    continue;
-                }
-
-                let commands = self.get_commands_from_table(format!("exec.{}", config_key), command_table.unwrap());
             }
         }
 
-        return ExecConfig { commands: HashMap::new() };
-    }
-
-    fn get_commands_from_table(&self, key: String, table: &Table) -> Option<Vec<String>> {
-        if table.contains_key("commands") {
-            let commands = table.get("commands").unwrap();
-            if commands.is_str() {
-                return Some(vec![String::from(commands.as_str().unwrap())]);
-            }
-
-            if commands.is_array() {
-                return Some(commands.as_array()
-                    .unwrap()
-                    .iter()
-                    .map(|x| String::from(x.as_str().unwrap()))
-                    .collect());
-            }
-
-            error!("{} was supposed to be an array or string, but was {}", key, commands.type_str());
-            return None;
-        } else {
-            return None;
-        }
+        return ExecConfig { commands: command_map };
     }
 
     pub fn get_checkout_configs(&self) -> CheckoutConfig {
@@ -111,6 +83,57 @@ impl ConfigContainer {
 
         let checkout_default = checkout_default.unwrap().as_str().map(|y| String::from(y));
         return CheckoutConfig { default: checkout_default };
+    }
+}
+
+pub(crate) fn prase_exec_table(config_entry: Option<&BTreeMap<String, Value>>) -> HashMap<String, ExecCommandConfig> {
+    let mut command_map: HashMap<String, ExecCommandConfig> = HashMap::new();
+
+    if config_entry.is_none() {
+        return command_map;
+    }
+
+    let config_entry = config_entry.unwrap();
+    for config_key in config_entry.keys() {
+        let command_entry = config_entry.get(config_key).unwrap();
+        let command_table = command_entry.as_table();
+        if command_table.is_none() {
+            debug!("{} was not a table, but instead was {}", config_key, command_entry.type_str());
+            continue;
+        }
+
+        let command_table = command_table.unwrap();
+        let commands = get_commands_from_table(format!("exec.{}", config_key), command_table);
+        let ignore_failures: bool = command_table.get("ignore_failures")
+            .unwrap_or_else(|| &Value::Boolean(false))
+            .as_bool().unwrap_or_else(|| false);
+
+        let config = ExecCommandConfig { commands: commands, ignore_failures: ignore_failures };
+        command_map.insert(config_key.clone(), config);
+    }
+
+    return command_map;
+}
+
+pub(crate) fn get_commands_from_table(key: String, table: &Table) -> Option<Vec<String>> {
+    if table.contains_key("commands") {
+        let commands = table.get("commands").unwrap();
+        if commands.is_str() {
+            return Some(vec![String::from(commands.as_str().unwrap())]);
+        }
+
+        if commands.is_array() {
+            return Some(commands.as_array()
+                .unwrap()
+                .iter()
+                .map(|x| String::from(x.as_str().unwrap()))
+                .collect());
+        }
+
+        error!("{} was supposed to be an array or string, but was {}", key, commands.type_str());
+        return None;
+    } else {
+        return None;
     }
 }
 
