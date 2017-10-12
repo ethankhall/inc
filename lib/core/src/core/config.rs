@@ -20,7 +20,7 @@ pub struct CheckoutConfig {
 
 #[derive(Debug, Clone)]
 pub struct ExecCommandConfig {
-    pub commands: Option<Vec<String>>,
+    pub commands: Vec<String>,
     pub ignore_failures: bool
 }
 
@@ -33,6 +33,9 @@ impl ConfigContainer {
     pub fn new() -> Self {
         let project_config: Vec<Value> = collapse_the_configs(search_up_for_config_files());
         let home_configs: Vec<Value> = collapse_the_configs(search_for_home_config());
+
+        trace!("Project Configs Found: {:?}", project_config);
+        trace!("Home Configs Found: {:?}", home_configs);
         return ConfigContainer {
             project_config: project_config,
             home_config: home_configs,
@@ -42,7 +45,6 @@ impl ConfigContainer {
     pub fn get_exec_configs(&self) -> ExecConfig {
         let mut command_map: HashMap<String, ExecCommandConfig> = HashMap::new();
         for config in self.project_config.clone().into_iter() {
-            debug!("Processing new config entry");
             let config_entry = config.get("exec");
             if config_entry.is_none() {
                 continue;
@@ -104,6 +106,12 @@ pub(crate) fn prase_exec_table(config_entry: Option<&BTreeMap<String, Value>>) -
 
         let command_table = command_table.unwrap();
         let commands = get_commands_from_table(format!("exec.{}", config_key), command_table);
+
+        if commands.is_none() {
+            continue;
+        }
+        let commands = commands.unwrap();
+        
         let ignore_failures: bool = command_table.get("ignore_failures")
             .unwrap_or_else(|| &Value::Boolean(false))
             .as_bool().unwrap_or_else(|| false);

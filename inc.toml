@@ -1,0 +1,2 @@
+[exec.build]
+commands = [ "cargo build" ]

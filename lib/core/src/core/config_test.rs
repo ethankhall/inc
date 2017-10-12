@@ -12,8 +12,7 @@ pub mod test {
         let results = prase_exec_table(foo_commands);
         assert!(results.contains_key("foo"), "foo didn't exist");
         let foo = results.get("foo").unwrap();
-        assert!(foo.commands.is_some(), "foo should have commands");
-        let foo_commands = foo.clone().commands.unwrap();
+        let foo_commands = foo.clone().commands;
         assert_eq!(foo_commands.len(), 1);
         assert_eq!(foo_commands.get(0).unwrap(), &String::from("bar"));
         assert_eq!(foo.clone().ignore_failures, false);
@@ -28,8 +27,7 @@ pub mod test {
         let results = prase_exec_table(foo_commands);
         assert!(results.contains_key("foo"), "foo didn't exist");
         let foo = results.get("foo").unwrap();
-        assert!(foo.commands.is_some(), "foo should have commands");
-        let foo_commands = foo.clone().commands.unwrap();
+        let foo_commands = foo.clone().commands;
         assert_eq!(foo_commands.len(), 2);
         assert_eq!(foo_commands.get(0).unwrap(), &String::from("bar"));
         assert_eq!(foo_commands.get(1).unwrap(), &String::from("baz"));
@@ -59,17 +57,17 @@ pub mod test {
         assert!(exec_configs.commands.contains_key("baz"), "has foo baz");
         assert_eq!(exec_configs.commands.len(), 3);
 
-        let foo_command = exec_configs.commands.get("foo").unwrap().clone().commands.expect("foo command exists");
+        let foo_command = exec_configs.commands.get("foo").unwrap().clone().commands;
         assert_eq!(foo_command.len(), 2);
         assert_eq!(foo_command.get(0), Some(&String::from("bar1")));
         assert_eq!(foo_command.get(1), Some(&String::from("baz1")));
 
-        let bar_command = exec_configs.commands.get("bar").unwrap().clone().commands.expect("bar command exists");
+        let bar_command = exec_configs.commands.get("bar").unwrap().clone().commands;
         assert_eq!(bar_command.len(), 2);
         assert_eq!(bar_command.get(0), Some(&String::from("bar2")));
         assert_eq!(bar_command.get(1), Some(&String::from("baz2")));
 
-        let baz_command = exec_configs.commands.get("baz").unwrap().clone().commands.expect("baz command exists");
+        let baz_command = exec_configs.commands.get("baz").unwrap().clone().commands;
         assert_eq!(baz_command.len(), 3);
         assert_eq!(baz_command.get(0), Some(&String::from("bar3")));
         assert_eq!(baz_command.get(1), Some(&String::from("baz3")));
