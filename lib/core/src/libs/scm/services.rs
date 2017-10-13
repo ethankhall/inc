@@ -1,7 +1,6 @@
 use libs::scm::{ScmUrl, ScmService, CheckoutError};
 use libs::process::SystemBinary;
-use exec::system::OutputCapturingSystemExecution;
-use exec::executor::Executor;
+use exec::executor::execute_external_command_for_output;
 use std::collections::HashMap;
 use core::BASE_APPLICATION_NAME;
 
@@ -58,15 +57,11 @@ impl ExternalScmService {
 
 impl ScmService for ExternalScmService {
     fn generate_url(&self, user_input: String) -> Result<ScmUrl, CheckoutError> {
-        let executor = Executor::new();
-        let execution = OutputCapturingSystemExecution {
-            command: self.binary.clone().path,
-        };
-        let result = executor.execute(&execution, &(vec![user_input]));
+        let result = execute_external_command_for_output(&(self.binary.clone().path), &(vec![user_input]));
 
         return match result {
             Ok(expr) => Ok(expr),
-            Err(value) => Err(CheckoutError { error: value }),
+            Err(value) => Err(CheckoutError { error: value.message }),
         };
     }
 
