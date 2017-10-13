@@ -8,12 +8,14 @@ pub(crate) struct Options {
     flag_help: bool,
     flag_verbose: Option<String>,
     flag_list: bool,
+    flag_quiet: bool,
+    flag_warn: bool,
 }
 
 pub const USAGE: &'static str = "Execute commands from the project.
 
 Usage:
-    inc-exec [options] <command>
+    inc-exec <command>
     inc-exec (-h | --help)
     inc-exec --list
 
@@ -21,6 +23,7 @@ Options:
     -h, --help          Display this message.
     -v, --verbose ...   Increasing verbosity.
     -q, --quiet         No output printed to stdout
+    -w, --warn          Only display WARN and above outputs.
     --list              List all of the avaliable commands.";
 
 pub(crate) fn execute(options: Options) -> CliResult {
@@ -32,8 +35,10 @@ pub(crate) fn execute(options: Options) -> CliResult {
 
     let exec_configs = ConfigContainer::new().get_exec_configs();
 
-    if options.flag_help {
-        info!("{}", USAGE);
+    if options.flag_list {
+        let command_list: Vec<String> = exec_configs.commands.keys().into_iter().map(|x| format!("\t{}", x)).collect();
+        let commands: String = command_list.join("\n");
+        info!("Avaliable Commands:\n{}", commands);
         return Ok(0);
     }
 
@@ -45,7 +50,6 @@ pub(crate) fn execute(options: Options) -> CliResult {
         }
     };
     
-    println!("command: {}", command);
     if !exec_configs.commands.contains_key(&command) {
         error!("Command {} doesn't exist in your configuration.", command);
         return Ok(10);

@@ -37,13 +37,15 @@ impl From<CliParseError> for CliError {
 pub fn call_main_without_stdin<'de, Flags: Debug + Deserialize<'de>>(
             exec: fn(Flags) -> CliResult,
             usage: &str,
-            args: &[String]) -> CliResult
+            args: &Vec<String>) -> CliResult
 {
     trace!("Arguments to be passed into sub-command: {:?}", args);
     let docopt = Docopt::new(usage).unwrap()
+        .argv(args.clone())
         .options_first(true)
-        .argv(args.iter().map(|s| &s[..]))
-        .help(true);
+        .help(false);
+
+    trace!("Options: {:?}", docopt);
 
     let flags = docopt.deserialize().map_err(|e| {
         CliParseError { fatal: e.fatal(), message: e.to_string() }

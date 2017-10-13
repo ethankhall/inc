@@ -72,7 +72,13 @@ fn main(){
         process::exit(0);
     }
 
-    let result = try_execute_builtin_command(doc_opts.arg_command, &doc_opts.arg_args.unwrap_or_else(|| vec![]));
+    let mut args: Vec<String> = Vec::new();
+    args.push(doc_opts.arg_command);
+    &doc_opts.arg_args.unwrap_or_else(|| vec![]).iter().for_each(|x| {
+        args.push(x.clone());
+    });
+
+    let result = try_execute_builtin_command(&args);
     if result.is_some() {
         let exit_code = match result.unwrap() {
             Ok(value) => value,
@@ -87,7 +93,8 @@ fn main(){
     process::exit(1);
 }
 
-fn try_execute_builtin_command(command: String, args: &Vec<String>) -> Option<CliResult> {
+fn try_execute_builtin_command(args: &Vec<String>) -> Option<CliResult> {
+    let command = args[0].clone();
     macro_rules! cmd {
         ($name:ident) => (if command == stringify!($name).replace("_", "-") {
             let r = call_main_without_stdin($name::execute,
