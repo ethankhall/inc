@@ -1,14 +1,21 @@
 use inc_core::core::config::ConfigContainer;
 use inc_core::exec::executor::{CliResult, execute_external_command};
 use std::path::PathBuf;
-use docopt::ArgvMap;
+
+#[derive(Deserialize, Debug)]
+pub(crate) struct Options {
+    arg_command: Option<String>,
+    flag_help: bool,
+    flag_verbose: Option<String>,
+    flag_list: bool,
+}
 
 pub const USAGE: &'static str = "Execute commands from the project.
 
 Usage:
-  inc-exec [options] <command>
-  inc-exec (-h | --help)
-  inc-exec --list
+    inc-exec [options] <command>
+    inc-exec (-h | --help)
+    inc-exec --list
 
 Options:
     -h, --help          Display this message.
@@ -16,17 +23,22 @@ Options:
     -q, --quiet         No output printed to stdout
     --list              List all of the avaliable commands.";
 
-pub(crate) fn execute(options: ArgvMap) -> CliResult {
+pub(crate) fn execute(options: Options) -> CliResult {
     trace!("Options to exec: {:?}", options);
-    if options.get_bool("--help") {
+    if options.flag_help {
         info!("{}", USAGE);
         return Ok(0);
     }
 
     let exec_configs = ConfigContainer::new().get_exec_configs();
 
-    let command = match options.find("<command>") {
-        Some(command) => String::from(command.as_str()),
+    if options.flag_help {
+        info!("{}", USAGE);
+        return Ok(0);
+    }
+
+    let command = match options.arg_command {
+        Some(command) => command,
         None => {
             error!("Option or command must be passed! Run inc exec --help for options");
             return Ok(1);

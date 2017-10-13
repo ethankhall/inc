@@ -6,7 +6,16 @@ use std::collections::HashSet;
 use inc_core::libs::scm::{PRE_DEFINED_CHECKOUT_SOURCES, DEFAULT_CHECKOUT_SOURCE};
 use inc_core::libs::process::SystemBinary;
 use inc_core::exec::executor::{CliResult};
-use docopt::{ArgvMap, Value};
+
+#[derive(Deserialize, Debug)]
+pub(crate) struct Options {
+    arg_repository: String,
+    arg_directory: Option<String>,
+    flag_version: bool,
+    flag_help: bool,
+    flag_verbose: Option<String>,
+    flag_service: Option<String>,
+}
 
 pub const USAGE: &'static str = "Usage:
   inc-checkout [options] <repository> [<directory>]
@@ -24,7 +33,7 @@ Args:
   <repository>    The (possibly remote) repository to clone from.
   <directory>     Clones a repository into a newly created directory.";
 
-pub(crate) fn execute(options: ArgvMap) -> CliResult {
+pub(crate) fn execute(options: Options) -> CliResult {
     trace!("Arguments to checkout: {:?}", options);
 
     let command_container = CommandContainer::new();
@@ -43,15 +52,9 @@ pub(crate) fn execute(options: ArgvMap) -> CliResult {
         .default
         .unwrap_or_else(|| String::from(DEFAULT_CHECKOUT_SOURCE));
 
-    let service = options.find("--service").map_or(default_sources, |x| String::from(x.as_str()));
-    let destination = options.find("<directory>").map_or(None, |x| Some(String::from(x.as_str())));
-    let repository = match options.find("<repository>") {
-        Some(repo) => String::from(repo.as_str()),
-        None => { 
-            error!("repository must be specified! Run inc checkout --help to see all options.");
-            return Ok(1);
-        }
-    };
+    let service = options.flag_service.unwrap_or_else(|| default_sources);
+    let destination = options.arg_directory;
+    let repository = options.arg_repository;
 
     debug!(
         "Checking out {}, using {} to get url, into {:?}",

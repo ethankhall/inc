@@ -1,6 +1,6 @@
 use core::BASE_APPLICATION_NAME;
 use core::cli::find_commands_avalible;
-use docopt::{Docopt, ArgvMap};
+use docopt::Docopt;
 use std::env::{self, current_exe, var};
 use std::process::Command;
 use std::collections::HashMap;
@@ -34,8 +34,8 @@ impl From<CliParseError> for CliError {
     }
 }
 
-pub fn call_main_without_stdin(
-            exec: fn(ArgvMap) -> CliResult,
+pub fn call_main_without_stdin<'de, Flags: Debug + Deserialize<'de>>(
+            exec: fn(Flags) -> CliResult,
             usage: &str,
             args: &[String]) -> CliResult
 {
@@ -43,13 +43,15 @@ pub fn call_main_without_stdin(
     let docopt = Docopt::new(usage).unwrap()
         .options_first(true)
         .argv(args.iter().map(|s| &s[..]))
-        .help(true)
-        .parse();
+        .help(true);
 
-    return match docopt {
-        Ok(result) => exec(result),
-        Err(result) => Err(CliError::new(102, format!("{:?}", result)))
-    };
+    let flags = docopt.deserialize().map_err(|e| {
+        CliParseError { fatal: e.fatal(), message: e.to_string() }
+    })?;
+
+    trace!("CLI Flags: {:?}", flags);
+
+    exec(flags)
 }
 
 pub fn execute_external_command(cmd: &PathBuf, args: &[String]) -> CliResult {

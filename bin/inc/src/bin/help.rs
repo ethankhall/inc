@@ -1,5 +1,8 @@
 use inc_core::exec::executor::{CliResult};
-use docopt::ArgvMap;
+
+#[derive(Deserialize, Debug)]
+pub(crate) struct Options {
+}
 
 pub const USAGE: &'static str = "Help! Help! I need an adult!!!
 
@@ -7,7 +10,7 @@ Usage:
     help
     help --version";
 
-pub(crate) fn execute(_options: ArgvMap) -> CliResult {
+pub(crate) fn execute(_options: Options) -> CliResult {
     info!("Help! Help! I need an adult!");
     return Ok(1);
 }
