@@ -59,22 +59,30 @@ pub(crate) struct Options {
 }
 
 fn main(){
-    let doc_opts:Options = Docopt::new(USAGE)
-        .and_then(|d| d.options_first(true)
-        .help(false)
-        .deserialize())
-        .unwrap_or_else(|e| e.exit());
-    
-    configure_logging(doc_opts.flag_verbose, doc_opts.flag_warn, doc_opts.flag_quiet);
+    let docopt = Docopt::new(USAGE).unwrap()
+        .options_first(true)
+        .help(false);
 
-    if doc_opts.flag_help {
+    let options: Options = docopt.deserialize().map_err(|e| {
+        println!("fatal: {}, message: {}", e.fatal(), e.to_string());
+        e.exit();
+    }).unwrap();
+    
+    configure_logging(options.flag_verbose, options.flag_warn, options.flag_quiet);
+
+    if options.flag_help {
         info!("{}", USAGE);
         process::exit(0);
     }
 
+    if options.flag_list {
+        info!("I don't know how to do that.... Yet!");
+        process::exit(0);
+    }
+
     let mut args: Vec<String> = Vec::new();
-    args.push(doc_opts.arg_command);
-    &doc_opts.arg_args.unwrap_or_else(|| vec![]).iter().for_each(|x| {
+    args.push(options.arg_command);
+    &options.arg_args.unwrap_or_else(|| vec![]).iter().for_each(|x| {
         args.push(x.clone());
     });
 
