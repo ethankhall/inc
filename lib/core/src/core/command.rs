@@ -1,11 +1,11 @@
 use std::collections::HashMap;
-use libs::process::SystemCommand;
+use libs::process::SystemBinary;
 use core::config::ConfigContainer;
 use core::cli::find_commands_avalible;
 
 #[derive(Debug, Clone)]
 pub struct CommandContainer {
-    pub commands: HashMap<String, SystemCommand>,
+    pub commands: HashMap<String, SystemBinary>,
 }
 
 impl CommandContainer {
@@ -13,7 +13,7 @@ impl CommandContainer {
         CommandContainer { commands: find_commands_avalible() }
     }
 
-    pub fn find_sub_commands(&self, command: String) -> Option<SystemCommand> {
+    pub fn find_command(&self, command: String) -> Option<SystemBinary> {
         return match self.commands.get(&(command)) {
             Some(value) => Some(value.clone()),
             None => None,

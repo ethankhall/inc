@@ -24,12 +24,12 @@ pub const USAGE: &'static str = "Usage:
   inc-checkout (-h | --help)
 
 Options:
-    -s <service>, --service=<service>       Where to checkout from. A lot of cases will be github.
-    -v, --verbose ...                       Increasing verbosity.
-    -w, --warn                              Only display warning messages.
-    -q, --quiet                             No output printed to stdout.
-    -h, --help                              Prints this message.
-    -l, --list                              Lists all options for service.
+  -s <service>, --service=<service>       Where to checkout from. A lot of cases will be github.
+  -v, --verbose ...                       Increasing verbosity.
+  -w, --warn                              Only display warning messages.
+  -q, --quiet                             No output printed to stdout.
+  -h, --help                              Prints this message.
+  -l, --list                              Lists all options for service.
 
 Args:
   <repository>    The (possibly remote) repository to clone from.
@@ -46,14 +46,16 @@ pub(crate) fn execute(options: Options) -> CliResult {
     let checkout_configs = ConfigContainer::new().get_checkout_configs();
     let command_container = CommandContainer::new();
 
-    let sub_commands = match command_container.find_sub_commands(format!("{}-checkout", BASE_APPLICATION_NAME)) {
-        Some(value) => value.sub_commands,
-        None => Vec::new(),
-    };
+    let command_prefix = format!("{}-checkout", BASE_APPLICATION_NAME);
+    let sub_commands = command_container.commands.clone().into_iter()
+        .filter(|&(ref key, ref _value)| key.starts_with(command_prefix.as_str()))
+        .map(|(_key, value)| value)
+        .collect();
 
     let default_sources = checkout_configs.default.unwrap_or_else(|| String::from(DEFAULT_CHECKOUT_SOURCE));
-    let service_options = possible_checkout_sources(&sub_commands);
-    trace!("Avaliable checout sources: {:?}", service_options);
+    let mut service_options = possible_checkout_sources(&sub_commands);
+    service_options.sort();
+    trace!("Avaliable checkout sources: {:?}", service_options);
 
     if options.flag_list {
         let mut service_list: Vec<String> = Vec::new();

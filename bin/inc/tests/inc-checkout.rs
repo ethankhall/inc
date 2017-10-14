@@ -7,9 +7,9 @@ mod integration {
     use std::path::PathBuf;
     use tempdir::TempDir;
     use std::env::var;
-    use std::fs::File;
     use std::io::prelude::*;
-    use std::os::unix::fs::PermissionsExt;
+    use std::fs;
+    use std::os::unix::fs::OpenOptionsExt;
 
     #[test]
     fn checkout_github_repo() {
@@ -44,17 +44,18 @@ mod integration {
             .succeeds()
             .and()
             .stdout().contains("Usage:
-  inc-checkout [(-s <service> | --service=<service>)] <repository> [<directory>]
+  inc-checkout [options] <repository> [<directory>]
+  inc-checkout <repository> [<directory>]
   inc-checkout [options]
   inc-checkout (-h | --help)
 
 Options:
-    -s <service>, --service=<service>       Where to checkout from. A lot of cases will be github.
-    -v, --verbose ...                       Increasing verbosity.
-    -w, --warn                              Only display warning messages.
-    -q, --quiet                             No output printed to stdout.
-    -h, --help                              Prints this message.
-    -l, --list                              Lists all options for service.
+  -s <service>, --service=<service>       Where to checkout from. A lot of cases will be github.
+  -v, --verbose ...                       Increasing verbosity.
+  -w, --warn                              Only display warning messages.
+  -q, --quiet                             No output printed to stdout.
+  -h, --help                              Prints this message.
+  -l, --list                              Lists all options for service.
 
 Args:
   <repository>    The (possibly remote) repository to clone from.
@@ -77,12 +78,14 @@ Args:
         with_test_dir(|tmp_dir| {
 
             let file_path = tmp_dir.clone().join("inc-checkout-service-foobar");
-            let mut tmp_file = File::create(file_path.clone()).expect("create temp file");
+            let file_path = file_path.to_str().unwrap();
+            let mut tmp_file = fs::OpenOptions::new()
+                .create(true)
+                .write(true)
+                .mode(0o770)
+                .open(file_path)
+                .unwrap();
             writeln!(tmp_file, "echo \"github.com/ethankhall/inc\"").expect("write temp file");
-            let metadata = tmp_file.metadata().expect("get metadata");
-            let mut permissions = metadata.permissions();
-
-            permissions.set_mode(0o777);
 
             let new_path = format!("{}:{}", var("PATH").unwrap(), tmp_dir.to_str().unwrap());
 
@@ -91,7 +94,7 @@ Args:
             .with_env(&[("PATH", new_path)])
             .succeeds()
             .and()
-            .stdout().contains("Services:\n - github\t[default]\n - foobar")
+            .stdout().contains("Services:\n - foobar\n - github\t[default]")
             .unwrap();
         });
     }
@@ -99,19 +102,22 @@ Args:
     #[test]
     fn checkout_from_service() {
         with_test_dir(|tmp_dir| {
+            let checkout_dir = tmp_dir.clone().join("inc-checkout");
 
             let file_path = tmp_dir.clone().join("inc-checkout-service-foobar");
-            let mut tmp_file = File::create(file_path.clone()).expect("create temp file");
-            writeln!(tmp_file, "echo \"github.com/ethankhall/inc\"").expect("write temp file");
-            let metadata = tmp_file.metadata().expect("get metadata");
-            let mut permissions = metadata.permissions();
+            let file_path = file_path.to_str().unwrap();
+            let mut tmp_file = fs::OpenOptions::new()
+                .create(true)
+                .write(true)
+                .mode(0o770)
+                .open(file_path)
+                .unwrap();
+            writeln!(tmp_file, "echo \"git@github.com:ethankhall/inc.git\"").expect("write temp file");
 
-            permissions.set_mode(0o777);
-
-            let new_path = format!("{}:{}", var("PATH").unwrap(), file_path.to_str().unwrap());
+            let new_path = format!("{}:{}", var("PATH").unwrap(), tmp_dir.to_str().unwrap());
 
             assert_cli::Assert::main_binary()
-                .with_args(&["checkout", "--service=foobar", "something-random"])
+                .with_args(&["-vvv", "checkout", "--service=foobar", "something-random", checkout_dir.to_str().unwrap()])
                 .with_env(&[("PATH", new_path)])
                 .succeeds()
                 .unwrap();

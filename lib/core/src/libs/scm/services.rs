@@ -11,6 +11,7 @@ pub fn build_service_map(sub_commands: &Vec<SystemBinary>,) -> HashMap<String, B
     let service_prefix = format!("{}-checkout-service-", BASE_APPLICATION_NAME);
 
     for external_source in sub_commands.into_iter() {
+        trace!("external_source: {:?}", external_source);
         if external_source.name.starts_with(service_prefix.as_str()) {
             let service_name = String::from(&external_source.name[(service_prefix.len())..]);
             let service = ExternalScmService::new(
@@ -21,8 +22,6 @@ pub fn build_service_map(sub_commands: &Vec<SystemBinary>,) -> HashMap<String, B
         }
     }
 
-
-    // sub_commands.into_iter()
     return result;
 }
 

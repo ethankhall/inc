@@ -1,5 +1,3 @@
-use core::BASE_APPLICATION_NAME;
-use core::cli::find_commands_avalible;
 use docopt::Docopt;
 use std::env::{self, current_exe, var};
 use std::process::Command;
@@ -57,17 +55,9 @@ pub fn call_main_without_stdin<'de, Flags: Debug + Deserialize<'de>>(
 }
 
 pub fn execute_external_command(cmd: &PathBuf, args: &[String]) -> CliResult {
-    let command_exe = format!("{}-{:?}{}", BASE_APPLICATION_NAME, cmd, env::consts::EXE_SUFFIX);
+    let command_exe = format!("{:?}{}", cmd.to_str().unwrap(), env::consts::EXE_SUFFIX);
 
-    let path = find_commands_avalible().get(&command_exe).map(|x| x.clone().binary.path);
-    let command = match path {
-        Some(command) => command,
-        None => {
-            return Err(CliError { code: 9, message: format!("Unable to find {:?}", cmd) })
-        }
-    };
-
-    let mut command = Command::new(command);
+    let mut command = Command::new(command_exe);
     let swawn = command
         .args(args)
         .envs(build_env_updates())
@@ -86,17 +76,9 @@ pub fn execute_external_command(cmd: &PathBuf, args: &[String]) -> CliResult {
 }
 
 pub fn execute_external_command_for_output(cmd: &PathBuf, args: &[String]) -> Result<String, CliError> {
-    let command_exe = format!("{}-{:?}{}", BASE_APPLICATION_NAME, cmd, env::consts::EXE_SUFFIX);
+    let command_exe = format!("{}{}", cmd.to_str().unwrap(), env::consts::EXE_SUFFIX);
 
-    let path = find_commands_avalible().get(&command_exe).map(|x| x.clone().binary.path);
-    let command = match path {
-        Some(command) => command,
-        None => {
-            return Err(CliError { code: 11, message: format!("Unable to find {:?}", cmd) })
-        }
-    };
-
-    let mut command = Command::new(command);
+    let mut command = Command::new(command_exe);
     let output = command
         .args(args)
         .envs(build_env_updates())
@@ -122,7 +104,7 @@ pub fn execute_external_command_for_output(cmd: &PathBuf, args: &[String]) -> Re
         ) });
     }
 
-    return Ok(String::from_utf8_lossy(&output.stdout).to_string());
+    return Ok(String::from_utf8_lossy(&output.stdout).trim().to_string());
 }
 
 fn build_env_updates() -> HashMap<String, String> {
