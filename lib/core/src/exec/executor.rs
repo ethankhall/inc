@@ -45,7 +45,7 @@ pub fn call_main_without_stdin<'de, Flags: Debug + Deserialize<'de>>(
         .options_first(true)
         .help(false);
 
-    trace!("Options: {:?}", docopt);
+    // trace!("Options: {:?}", docopt);
 
     let flags = docopt.deserialize().map_err(|e| {
         CliParseError { fatal: e.fatal(), message: e.to_string() }

@@ -1,4 +1,4 @@
-use inc_core::core::command::{CommandContainer};
+use inc_core::core::command::CommandContainer;
 use inc_core::core::config::ConfigContainer;
 use inc_core::libs::scm::api::{build_url_from_service, checkout};
 use inc_core::core::BASE_APPLICATION_NAME;
@@ -19,6 +19,8 @@ pub(crate) struct Options {
 
 pub const USAGE: &'static str = "Usage:
   inc-checkout [options] <repository> [<directory>]
+  inc-checkout <repository> [<directory>]
+  inc-checkout [options]
   inc-checkout (-h | --help)
 
 Options:
@@ -34,23 +36,42 @@ Args:
   <directory>     Clones a repository into a newly created directory.";
 
 pub(crate) fn execute(options: Options) -> CliResult {
-    trace!("Arguments to checkout: {:?}", options);
+    // trace!("Arguments to checkout: {:?}", options);
 
+    if options.flag_help {
+        info!("{}", USAGE);
+        return Ok(0);
+    }
+
+    let checkout_configs = ConfigContainer::new().get_checkout_configs();
     let command_container = CommandContainer::new();
-    let config_container = ConfigContainer::new();
 
     let sub_commands = match command_container.find_sub_commands(format!("{}-checkout", BASE_APPLICATION_NAME)) {
         Some(value) => value.sub_commands,
         None => Vec::new(),
     };
 
+    let default_sources = checkout_configs.default.unwrap_or_else(|| String::from(DEFAULT_CHECKOUT_SOURCE));
     let service_options = possible_checkout_sources(&sub_commands);
     trace!("Avaliable checout sources: {:?}", service_options);
 
-    let default_sources = config_container
-        .get_checkout_configs()
-        .default
-        .unwrap_or_else(|| String::from(DEFAULT_CHECKOUT_SOURCE));
+    if options.flag_list {
+        let mut service_list: Vec<String> = Vec::new();
+        for service in service_options.into_iter() {
+            let mut body = String::from(format!(" - {}", service));
+            if default_sources == service {
+                body.push_str("\t[default]");
+            } 
+            service_list.push(body);
+        }
+        info!("Services:\n{}", service_list.join("\n"));
+        return Ok(0);
+    }
+
+    if options.arg_repository == "" {
+        error!("No repository specified. Review `inc checkout --help` for options.");
+        return Ok(1);
+    }
 
     let service = options.flag_service.unwrap_or_else(|| default_sources);
     let destination = options.arg_directory;

@@ -28,6 +28,7 @@ each_subcommand!(declare_mod);
 const USAGE: &'static str = "Inc[luding] your configuration, one step at a time.
 
 Usage:
+    inc [options] <command> [--] [<args>...]
     inc <command> [--] [<args>...]
     inc [options]
     inc --list
@@ -63,6 +64,8 @@ fn main(){
     let docopt = Docopt::new(USAGE).unwrap()
         .options_first(true)
         .help(false);
+
+    // println!("{:?}", docopt);
 
     let options: Options = match docopt.deserialize() {
         Ok(value) => value,
