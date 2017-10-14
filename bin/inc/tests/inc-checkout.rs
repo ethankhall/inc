@@ -100,7 +100,7 @@ Args:
     }
 
     #[test]
-    fn checkout_from_service() {
+    fn checkout_from_service_with_param() {
         with_test_dir(|tmp_dir| {
             let checkout_dir = tmp_dir.clone().join("inc-checkout");
 
@@ -121,6 +121,33 @@ Args:
                 .with_env(&[("PATH", new_path)])
                 .succeeds()
                 .unwrap();
+
+            assert!(checkout_dir.exists());
+        });
+    }
+
+    #[test]
+    fn checkout_from_service() {
+        with_test_dir(|tmp_dir| {
+            let file_path = tmp_dir.clone().join("inc-checkout-service-foobar");
+            let file_path = file_path.to_str().unwrap();
+            let mut tmp_file = fs::OpenOptions::new()
+                .create(true)
+                .write(true)
+                .mode(0o770)
+                .open(file_path)
+                .unwrap();
+            writeln!(tmp_file, "echo \"git@github.com:ethankhall/inc.git\"").expect("write temp file");
+
+            let new_path = format!("{}:{}", var("PATH").unwrap(), tmp_dir.to_str().unwrap());
+
+            assert_cli::Assert::command(&[build_exec().as_str(), "checkout", "--service=foobar", "something-random"])
+                .with_env(&[("PATH", new_path)])
+                .succeeds()
+                .current_dir(tmp_dir.clone())
+                .unwrap();
+
+            assert!(tmp_dir.clone().join("inc").exists());
         });
     }
 
