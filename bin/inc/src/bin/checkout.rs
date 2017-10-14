@@ -11,10 +11,10 @@ use inc_core::exec::executor::{CliResult};
 pub(crate) struct Options {
     arg_repository: String,
     arg_directory: Option<String>,
-    flag_version: bool,
     flag_help: bool,
     flag_verbose: Option<String>,
     flag_service: Option<String>,
+    flag_list: bool,
 }
 
 pub const USAGE: &'static str = "Usage:

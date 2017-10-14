@@ -12,6 +12,7 @@ log = "0.3"
 
 [dev-dependencies]
 assert_cli = "0.5"
+tempdir = "0.3"
 
 [[bin]]
 name = "inc"

@@ -28,7 +28,8 @@ each_subcommand!(declare_mod);
 const USAGE: &'static str = "Inc[luding] your configuration, one step at a time.
 
 Usage:
-    inc [options] <command> [--] [<args>...]
+    inc <command> [--] [<args>...]
+    inc [options]
     inc --list
     inc --version
     inc --help
@@ -48,7 +49,7 @@ Some common inc commands are (see all commands with --list):
 
 #[derive(Debug, Deserialize)]
 pub(crate) struct Options {
-    pub arg_command: String,
+    pub arg_command: Option<String>,
     pub arg_args: Option<Vec<String>>,
     pub flag_version: bool,
     pub flag_help: bool,
@@ -63,10 +64,13 @@ fn main(){
         .options_first(true)
         .help(false);
 
-    let options: Options = docopt.deserialize().map_err(|e| {
-        println!("fatal: {}, message: {}", e.fatal(), e.to_string());
-        e.exit();
-    }).unwrap();
+    let options: Options = match docopt.deserialize() {
+        Ok(value) => value,
+        Err(value) => {
+            println!("{}", value.to_string());
+            process::exit(1);
+        }
+    };
     
     configure_logging(options.flag_verbose, options.flag_warn, options.flag_quiet);
 
@@ -80,8 +84,16 @@ fn main(){
         process::exit(0);
     }
 
+    let command = match options.arg_command {
+        Some(value) => value,
+        None => {
+            error!("No options provided. See `inc --help` for more options.");
+            process::exit(1);
+        }
+    };
+
     let mut args: Vec<String> = Vec::new();
-    args.push(options.arg_command);
+    args.push(command);
     &options.arg_args.unwrap_or_else(|| vec![]).iter().for_each(|x| {
         args.push(x.clone());
     });
@@ -91,7 +103,7 @@ fn main(){
         let exit_code = match result.unwrap() {
             Ok(value) => value,
             Err(value) => {
-                error!("Error executing sub command: {:?}", value.message);
+                error!("{}", value.message);
                 102
             }
         };

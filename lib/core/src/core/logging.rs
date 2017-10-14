@@ -1,8 +1,8 @@
-use std::io::stdout;
+use std::io::{stdout, stderr};
 use chrono::Local;
 
 use fern::Dispatch;
-use log::LogLevelFilter;
+use log::{LogLevelFilter, LogLevel};
 
 pub fn configure_logging(verbose: i32, warn: bool, quite: bool) {
     let level = if quite {
@@ -18,7 +18,14 @@ pub fn configure_logging(verbose: i32, warn: bool, quite: bool) {
     
     let result = configure_logging_output(level, dispatch)
     .level(level)
-    .chain(stdout())
+    .chain(
+        Dispatch::new()
+            .filter(|log_meta| LogLevel::Warn <= log_meta.level())
+            .chain(stdout()))
+    .chain(
+        Dispatch::new()
+            .filter(|log_meta| LogLevel::Error == log_meta.level())
+            .chain(stderr()))
     .apply();
 
     if result.is_err() {
