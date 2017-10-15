@@ -72,7 +72,7 @@ pub(crate) fn execute(options: Options) -> CliResult {
                     return Ok(value);
                 }
             },
-            Err(err) => {
+            Err(_err) => {
                 error!("Error while executing {:?}!", command_exec);
                 return Ok(17);
             }
