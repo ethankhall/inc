@@ -67,4 +67,35 @@ mod exec_integration {
                 .unwrap();
         });
     }
+
+    #[test]
+    fn list_with_multiple_commands() {
+        with_test_dir(|tmp_dir| {
+            let file_path = tmp_dir.clone().join("inc.toml");
+            copy_resource("sample2.toml", file_path);
+
+            create_assert()
+                .with_args(&["-vvv", "exec", "--list"])
+                .current_dir(tmp_dir.clone())
+                .succeeds()
+                .and()
+                .stderr().is("")
+                .stdout().contains("Avaliable Commands:
+ - name: build
+   description: Build the project
+   commands:
+     - echo \"Hello World\"
+     - echo \"Goodbye World!\"")
+                .unwrap();
+
+            create_assert()
+                .with_args(&["exec", "build"])
+                .current_dir(tmp_dir.clone())
+                .succeeds()
+                .and()
+                .stderr().is("")
+                .stdout().contains("Hello World\nGoodbye World!\n")
+                .unwrap();
+        });
+    }
 }
