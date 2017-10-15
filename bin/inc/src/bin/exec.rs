@@ -68,7 +68,7 @@ pub(crate) fn execute(options: Options) -> CliResult {
         match result {
             Ok(value) => {
                 if value != 0 {
-                    error!("Command: `{:?}` returned {}", command_exec, value);
+                    error!("Command: `{}` returned {}", command_exec, value);
                     return Ok(value);
                 }
             },

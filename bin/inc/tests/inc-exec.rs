@@ -98,4 +98,36 @@ mod exec_integration {
                 .unwrap();
         });
     }
+
+    #[test]
+    fn when_command_failes_it_will_stop() {
+        with_test_dir(|tmp_dir| {
+            let file_path = tmp_dir.clone().join("inc.toml");
+            copy_resource("sample3.toml", file_path);
+
+            create_assert()
+                .with_args(&["-vvv", "exec", "--list"])
+                .current_dir(tmp_dir.clone())
+                .succeeds()
+                .and()
+                .stderr().is("")
+                .stdout().contains("Avaliable Commands:
+ - name: build
+   description: This should fail, due to the false.
+   commands:
+     - echo \"Hello World\"
+     - false
+     - echo \"Goodbye World!\"")
+                .unwrap();
+
+            create_assert()
+                .with_args(&["exec", "build"])
+                .current_dir(tmp_dir.clone())
+                .fails()
+                .and()
+                .stderr().is("Command: `false` returned 1")
+                .stdout().contains("Hello World\n")
+                .unwrap();
+        });
+    }
 }
