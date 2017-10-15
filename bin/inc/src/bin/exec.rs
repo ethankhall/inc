@@ -1,6 +1,7 @@
-use inc_core::core::config::ConfigContainer;
+use inc_core::core::config::{ConfigContainer, ExecConfig};
 use inc_core::exec::executor::{CliResult, execute_external_command};
 use std::path::PathBuf;
+use std::fmt::Write;
 
 #[derive(Deserialize, Debug)]
 pub(crate) struct Options {
@@ -16,7 +17,9 @@ pub const USAGE: &'static str = "Execute commands from the project.
 
 Usage:
     inc-exec <command>
-    inc-exec (-h | --help)
+    inc-exec [options]
+    inc-exec [options] <command>
+    inc-exec --help
     inc-exec --list
 
 Options:
@@ -33,19 +36,18 @@ pub(crate) fn execute(options: Options) -> CliResult {
         return Ok(0);
     }
 
-    let exec_configs = ConfigContainer::new().get_exec_configs();
+    let configs = ConfigContainer::new();
+    let exec_configs = configs.get_exec_configs();
 
     if options.flag_list {
-        let command_list: Vec<String> = exec_configs.commands.keys().into_iter().map(|x| format!("\t{}", x)).collect();
-        let commands: String = command_list.join("\n");
-        info!("Avaliable Commands:\n{}", commands);
+        info!("{}", generate_list_options(&exec_configs));
         return Ok(0);
     }
 
     let command = match options.arg_command {
         Some(command) => command,
         None => {
-            error!("Option or command must be passed! Run inc exec --help for options");
+            error!("Option or command must be passed! Run inc exec --help for options.");
             return Ok(1);
         }
     };
@@ -72,9 +74,29 @@ pub(crate) fn execute(options: Options) -> CliResult {
             },
             Err(err) => {
                 error!("Error while executing {:?}!", command_exec);
-                return Err(err);
+                return Ok(17);
             }
         }
     }
     return Ok(0);
+}
+
+fn generate_list_options(config: &ExecConfig) -> String {
+    let mut list = String::new();
+    write!(&mut list, "Avaliable Commands:\n").unwrap();
+    
+    let command_map = config.clone().commands;
+    let mut commands: Vec<&String> = command_map.keys().collect();
+    commands.sort();
+    
+    for key in commands.iter() {
+        let value = command_map.get(*key).unwrap();
+        write!(&mut list, " - name: {}\n", key).unwrap();
+        write!(&mut list, "   description: {}\n", value.description).unwrap();
+        write!(&mut list, "   commands:\n").unwrap();
+        for command in value.commands.iter() {
+            write!(&mut list, "     - {}\n", command).unwrap();
+        }
+    }
+    return list;
 }

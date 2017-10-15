@@ -1,23 +1,24 @@
 extern crate assert_cli;
 extern crate tempdir;
 
+mod shared;
+
 #[cfg(test)]
-mod integration {
-    use assert_cli;
-    use std::path::PathBuf;
-    use tempdir::TempDir;
+mod checkout_integration {
     use std::env::var;
     use std::io::prelude::*;
     use std::fs;
     use std::os::unix::fs::OpenOptionsExt;
+    use shared::utils::*;
 
     #[test]
     fn checkout_github_repo() {
         with_test_dir(|tmp_dir| {
-            assert_cli::Assert::command(&[build_exec().as_str(), "checkout", "ethankhall/inc"])
-            .current_dir(tmp_dir.clone())
-            .succeeds()
-            .unwrap();
+            create_assert()
+                .with_args(&["checkout", "ethankhall/inc"])
+                .current_dir(tmp_dir.clone())
+                .succeeds()
+                .unwrap();
 
             let inc_dir = tmp_dir.join("inc");
             assert!(inc_dir.exists());
@@ -29,7 +30,7 @@ mod integration {
 
     #[test]
     fn checkout_no_args() {
-        assert_cli::Assert::main_binary()
+        create_assert()
             .with_args(&["checkout"])
             .fails()
             .and()
@@ -39,7 +40,7 @@ mod integration {
 
     #[test]
     fn checkout_help() {
-        assert_cli::Assert::main_binary()
+        create_assert()
             .with_args(&["checkout", "--help"])
             .succeeds()
             .and()
@@ -65,7 +66,7 @@ Args:
 
     #[test]
     fn checkout_list_internal() {
-        assert_cli::Assert::main_binary()
+        create_assert()
             .with_args(&["checkout", "--list"])
             .succeeds()
             .and()
@@ -89,7 +90,7 @@ Args:
 
             let new_path = format!("{}:{}", var("PATH").unwrap(), tmp_dir.to_str().unwrap());
 
-            assert_cli::Assert::main_binary()
+            create_assert()
             .with_args(&["-vvv", "checkout", "--list"])
             .with_env(&[("PATH", new_path)])
             .succeeds()
@@ -105,18 +106,11 @@ Args:
             let checkout_dir = tmp_dir.clone().join("inc-checkout");
 
             let file_path = tmp_dir.clone().join("inc-checkout-service-foobar");
-            let file_path = file_path.to_str().unwrap();
-            let mut tmp_file = fs::OpenOptions::new()
-                .create(true)
-                .write(true)
-                .mode(0o770)
-                .open(file_path)
-                .unwrap();
-            writeln!(tmp_file, "echo \"git@github.com:ethankhall/inc.git\"").expect("write temp file");
+            copy_resource("inc-checkout-service-foobar", file_path);
 
             let new_path = format!("{}:{}", var("PATH").unwrap(), tmp_dir.to_str().unwrap());
 
-            assert_cli::Assert::main_binary()
+            create_assert()
                 .with_args(&["-vvv", "checkout", "--service=foobar", "something-random", checkout_dir.to_str().unwrap()])
                 .with_env(&[("PATH", new_path)])
                 .succeeds()
@@ -130,18 +124,12 @@ Args:
     fn checkout_from_service() {
         with_test_dir(|tmp_dir| {
             let file_path = tmp_dir.clone().join("inc-checkout-service-foobar");
-            let file_path = file_path.to_str().unwrap();
-            let mut tmp_file = fs::OpenOptions::new()
-                .create(true)
-                .write(true)
-                .mode(0o770)
-                .open(file_path)
-                .unwrap();
-            writeln!(tmp_file, "echo \"git@github.com:ethankhall/inc.git\"").expect("write temp file");
+            copy_resource("inc-checkout-service-foobar", file_path);
 
             let new_path = format!("{}:{}", var("PATH").unwrap(), tmp_dir.to_str().unwrap());
 
-            assert_cli::Assert::command(&[build_exec().as_str(), "checkout", "--service=foobar", "something-random"])
+            create_assert()
+                .with_args(&["checkout", "--service=foobar", "something-random"])
                 .with_env(&[("PATH", new_path)])
                 .succeeds()
                 .current_dir(tmp_dir.clone())
@@ -149,27 +137,5 @@ Args:
 
             assert!(tmp_dir.clone().join("inc").exists());
         });
-    }
-
-    fn with_test_dir<F: Fn(PathBuf) -> ()>(exec: F) {
-        let tmp_dir = TempDir::new("checkout-dir-tmp").expect("temp dir should be created");
-
-        exec(tmp_dir.path().to_owned());
-
-        tmp_dir.close().expect("temp dir should be closed");
-    }
-
-    fn build_exec() -> String {
-        let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-        path.pop();
-        path.pop();
-        path.push("target");
-        path.push("debug");
-        path.push("inc");
-
-        let path = String::from(path.to_str().unwrap());
-
-        println!("path: {}", path);
-        path
     }
 }

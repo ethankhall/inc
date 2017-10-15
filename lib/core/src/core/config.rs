@@ -3,6 +3,7 @@ use std::env::{current_dir, home_dir};
 use std::path::PathBuf;
 use toml::value::Value;
 use toml::value::Table;
+use toml::de::Error;
 use std::fs::File;
 use std::io::prelude::*;
 use std::collections::{HashMap, BTreeMap};
@@ -21,13 +22,16 @@ pub struct CheckoutConfig {
 #[derive(Debug, Clone)]
 pub struct ExecCommandConfig {
     pub commands: Vec<String>,
-    pub ignore_failures: bool
+    pub ignore_failures: bool,
+    pub description: String,
 }
 
 #[derive(Debug, Clone)]
 pub struct ExecConfig {
     pub commands: HashMap<String, ExecCommandConfig>
 }
+
+pub const NO_DESCRIPTION: &'static str = "No Description Provided";
 
 impl ConfigContainer {
     pub fn new() -> Self {
@@ -116,7 +120,11 @@ pub(crate) fn prase_exec_table(config_entry: Option<&BTreeMap<String, Value>>) -
             .unwrap_or_else(|| &Value::Boolean(false))
             .as_bool().unwrap_or_else(|| false);
 
-        let config = ExecCommandConfig { commands: commands, ignore_failures: ignore_failures };
+        let description: String = command_table.get("description")
+            .map_or_else(|| NO_DESCRIPTION, |x| x.as_str().unwrap_or_else(|| NO_DESCRIPTION))
+            .to_string();
+
+        let config = ExecCommandConfig { commands: commands, ignore_failures: ignore_failures, description: description };
         command_map.insert(config_key.clone(), config);
     }
 
@@ -149,23 +157,25 @@ fn collapse_the_configs(config_files: Vec<PathBuf>) -> Vec<Value> {
     let mut return_configs: Vec<Value> = Vec::new();
 
     for val in config_files {
-        match parse_config_file(val) {
-            Some(config) => {
+        match parse_config_file(&val) {
+            Ok(config) => {
                 return_configs.push(config);
             }
-            _ => {}
+            Err(err) => {
+                error!("Error trying to parse {:?}: '{}'", val, err);
+            }
         }
     }
 
     return return_configs;
 }
 
-fn parse_config_file(path: PathBuf) -> Option<Value> {
+fn parse_config_file(path: &PathBuf) -> Result<Value, Error> {
     let mut file = File::open(path).expect("Unable to open the file");
     let mut contents = String::new();
     file.read_to_string(&mut contents).expect("Unable to read the file");
-
-    return contents.parse::<Value>().ok();
+    let parsed = contents.parse::<Value>();
+    return parsed;
 }
 
 /**
