@@ -37,7 +37,7 @@ mod exec_integration {
  - name: run
    description: No Description Provided
    commands:
-     - echo \"Hello World\"")
+     - echo \"Goodbye World!\"")
                 .unwrap();
         });
     }
@@ -55,6 +55,15 @@ mod exec_integration {
                 .and()
                 .stderr().is("")
                 .stdout().contains("Hello World")
+                .unwrap();
+            
+            create_assert()
+                .with_args(&["-vvv", "exec", "run"])
+                .current_dir(tmp_dir.clone())
+                .succeeds()
+                .and()
+                .stderr().is("")
+                .stdout().contains("Goodbye World!")
                 .unwrap();
         });
     }

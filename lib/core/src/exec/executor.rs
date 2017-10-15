@@ -56,10 +56,9 @@ pub fn call_main_without_stdin<'de, Flags: Debug + Deserialize<'de>>(
 
 pub fn execute_external_command(cmd: &PathBuf, args: &[String]) -> CliResult {
     let command_exe = format!("{:?}{}", cmd.to_str().unwrap(), env::consts::EXE_SUFFIX);
+    let mut command = build_command(command_exe, args);
 
-    let mut command = Command::new(command_exe);
     let swawn = command
-        .args(args)
         .envs(build_env_updates())
         .spawn();
 
@@ -77,12 +76,9 @@ pub fn execute_external_command(cmd: &PathBuf, args: &[String]) -> CliResult {
 
 pub fn execute_external_command_for_output(cmd: &PathBuf, args: &[String]) -> Result<String, CliError> {
     let command_exe = format!("{}{}", cmd.to_str().unwrap(), env::consts::EXE_SUFFIX);
-
-    let mut command = Command::new(command_exe);
-    let output = command
-        .args(args)
-        .envs(build_env_updates())
-        .output();
+    let mut command = build_command(command_exe, args);
+    
+    let output = command.output();
 
     if let Err(value) = output {
         return Err(CliError { code: 12, message: format!("Unable to execute command: {}", value) })
@@ -105,6 +101,34 @@ pub fn execute_external_command_for_output(cmd: &PathBuf, args: &[String]) -> Re
     }
 
     return Ok(String::from_utf8_lossy(&output.stdout).trim().to_string());
+}
+
+fn build_command(cmd: String, args: &[String]) -> Box<Command> {
+    let mut command_string = String::new();
+    command_string.push_str(cmd.as_str());
+    for arg in args.iter() {
+        command_string.push_str(" ");
+        command_string.push_str(arg.as_str());
+    }
+
+    let mut command = build_cmd_for_platform();
+    command
+        .arg(command_string)
+        .envs(build_env_updates());
+
+    return Box::from(command);
+}
+
+fn build_cmd_for_platform() -> Command {
+    if cfg!(target_os = "windows") {
+        let mut cmd = Command::new("cmd");
+        cmd.arg("/C");
+        return cmd;
+    } else {
+        let mut cmd = Command::new("sh");
+        cmd.arg("-c");
+        return cmd;
+    }
 }
 
 fn build_env_updates() -> HashMap<String, String> {
