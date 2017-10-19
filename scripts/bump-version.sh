@@ -22,3 +22,4 @@ echo "${BODY}" | curl -s -X POST -H "X-AUTH-TOKEN: ${AUTH_TOKEN}" -H "Content-Ty
 
 VERSION=`curl -s -H "Content-Type: application/json" http://api.crom.tech/api/v1/project/ethankhall/repo/inc/version/$SHA | jq -r '.version'`
 find $DIR/.. -name Cargo.toml -exec sed -i.bck "s/version = \".*\"/version = \"$VERSION\"/g" {} \;
+git tag "v$VERSION"
