@@ -1,11 +1,11 @@
-use inc_core::core::command::CommandContainer;
-use inc_core::core::config::ConfigContainer;
-use inc_core::libs::scm::api::{build_url_from_service, checkout};
-use inc_core::core::BASE_APPLICATION_NAME;
+use inc::core::command::CommandContainer;
+use inc::core::config::ConfigContainer;
+use inc::libs::scm::api::{build_url_from_service, checkout};
+use inc::core::BASE_APPLICATION_NAME;
 use std::collections::HashSet;
-use inc_core::libs::scm::{PRE_DEFINED_CHECKOUT_SOURCES, DEFAULT_CHECKOUT_SOURCE};
-use inc_core::libs::process::SystemBinary;
-use inc_core::exec::executor::{CliResult};
+use inc::libs::scm::{PRE_DEFINED_CHECKOUT_SOURCES, DEFAULT_CHECKOUT_SOURCE};
+use inc::libs::process::SystemBinary;
+use inc::exec::executor::{CliResult};
 
 #[derive(Deserialize, Debug)]
 pub(crate) struct Options {

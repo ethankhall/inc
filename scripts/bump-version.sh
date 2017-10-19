@@ -20,5 +20,5 @@ BODY=`jq --null-input --argjson commits "$COMMITS" --arg message "${MESSAGE}" --
 
 echo "${BODY}" | curl -s -X POST -H "X-AUTH-TOKEN: ${AUTH_TOKEN}" -H "Content-Type: application/json" http://api.crom.tech/api/v1/project/ethankhall/repo/inc/version -d @-
 
-VERSION=`curl -s -H "Content-Type: application/json" http://api.crom.tech/api/v1/project/ethankhall/repo/inc/version/$SHA | jq '.version'`
+VERSION=`curl -s -H "Content-Type: application/json" http://api.crom.tech/api/v1/project/ethankhall/repo/inc/version/$SHA | jq -r '.version'`
 find $DIR/.. -name Cargo.toml -exec sed -i "s/version = \".*\"/version = \"$VERSION\"/g" {} \;

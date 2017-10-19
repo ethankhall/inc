@@ -1,2 +1,7 @@
-[exec.build]
-commands = [ "cargo build" ]
+[exec]
+ci = { commands = "cargo build --tests" }
+release = { commands = [ 
+    "cargo build --release",
+    "cargo build --target=x86_64-apple-darwin --release",
+    "cargo build --target=x86_64-pc-windows-gnu --release"
+] }

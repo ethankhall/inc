@@ -3,11 +3,11 @@ extern crate log;
 extern crate serde;
 #[macro_use]
 extern crate serde_derive;
-extern crate inc_core;
+extern crate inc;
 extern crate docopt;
 
-use inc_core::core::logging::configure_logging;
-use inc_core::exec::executor::{CliResult, call_main_without_stdin};
+use inc::core::logging::configure_logging;
+use inc::exec::executor::{CliResult, call_main_without_stdin};
 use std::process;
 use docopt::Docopt;
 

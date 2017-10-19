@@ -1,0 +1,20 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: ethankhall/rust-cross-build:latest
+    steps:
+      - run:
+          name: Update Rust
+          command: rustup update
+      - checkout
+      - run:
+          name: Build Initial Inc Binary
+          command: cargo build
+      - run:
+          name: Make a copy of inc
+          command: cp ./target/debug/inc ~/inc
+      - run:
+          name: Build with inc.
+          command: inc exec ci
+

@@ -1,2 +1,32 @@
-[workspace]
-members = ["lib/core", "bin/inc"]
+[package]
+name = "inc-core"
+version = "0.1.1"
+authors = ["Ethan Hall <ethan@ehdev.io>"]
+
+[lib]
+name = "inc"
+path = "src/inc/lib.rs"
+
+[dependencies]
+log = "0.3"
+docopt = "0.8.1"
+regex = "0.2"
+url = "1.5.1"
+names = "0.11.0"
+toml = "0.4"
+fern = "0.4.3"
+chrono = "0.4.0"
+serde = "1.0"
+serde_derive = "1.0"
+
+[dev-dependencies]
+assert_cli = "0.5"
+tempdir = "0.3"
+toml = "0.4"
+serde = "1.0.15"
+serde_derive = "1.0.15"
+
+[[bin]]
+name = "inc"
+test = false
+doc = false

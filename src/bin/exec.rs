@@ -1,5 +1,5 @@
-use inc_core::core::config::{ConfigContainer, ExecConfig};
-use inc_core::exec::executor::{CliResult, execute_external_command};
+use inc::core::config::{ConfigContainer, ExecConfig};
+use inc::exec::executor::{CliResult, execute_external_command};
 use std::path::PathBuf;
 use std::fmt::Write;
 

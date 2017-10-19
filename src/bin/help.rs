@@ -1,4 +1,4 @@
-use inc_core::exec::executor::{CliResult};
+use inc::exec::executor::{CliResult};
 
 #[derive(Deserialize, Debug)]
 pub(crate) struct Options {
