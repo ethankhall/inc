@@ -1,5 +1,8 @@
 [exec]
-ci = { commands = "cargo build --tests" }
+ci = { commands = [
+    "cargo build",
+    "cargo test"
+ ] }
 release = { commands = [ 
     "cargo build --release",
     "cargo build --target=x86_64-apple-darwin --release",

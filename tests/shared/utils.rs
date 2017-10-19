@@ -13,8 +13,6 @@ pub fn with_test_dir<F: Fn(PathBuf) -> ()>(exec: F) {
 
 pub fn build_exec() -> String {
     let mut path = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    path.pop();
-    path.pop();
     path.push("target");
     path.push("debug");
     path.push("inc");
