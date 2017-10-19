@@ -16,5 +16,16 @@ jobs:
           command: cp ./target/debug/inc ~/inc
       - run:
           name: Build with inc.
-          command: inc exec ci
+          command: ~/inc exec ci
+      - run:
+          name: Build All Variants
+          command: ~/inc exec release
+          # Make sure it builds everywhere
+      - run:
+          name: Tag and Push Version
+          command: ./scripts/bump-version.sh
+      - run:
+          name: Build All Variants
+          command: ~/inc exec release
+          # This time with the right version
 
