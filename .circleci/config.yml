@@ -7,6 +7,9 @@ jobs:
       - run:
           name: Update Rust
           command: rustup update
+      - run:
+          name: Install SSH
+          command: yaourt -S --noconfirm openssh
       - checkout
       - run:
           name: Build Initial Inc Binary
