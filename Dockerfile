@@ -21,5 +21,4 @@ RUN /home/builder/.cargo/bin/cargo build --target=x86_64-pc-windows-gnu --releas
 RUN mkdir /home/builder/output && \
     cp target/release/inc /home/builder/output/inc-linux-$VERSION && \ 
     cp target/x86_64-apple-darwin/release/inc /home/builder/output/inc-darwin-$VERSION && \ 
-    cp target/x86_64-pc-windows-gnu/release/inc.exe /home/builder/output/inc-windows-$VERSION.exe && \ 
-    tree /home/builder/output
+    cp target/x86_64-pc-windows-gnu/release/inc.exe /home/builder/output/inc-windows-$VERSION.exe

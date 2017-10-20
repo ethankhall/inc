@@ -66,10 +66,10 @@ for file in release/$VERSION/*
 do
   ARTIFACT_NAME=`basename $file`
 
-  curl -u ethankhall:$GITHUB_API_TOKEN \
+  curl --fail -s -u ethankhall:$GITHUB_API_TOKEN \
     -X "POST" "${UPLOAD_URL}?name=$ARTIFACT_NAME" \
     -H "Content-Type: application/octet-stream" \
-    --data-binary @"$file"
+    --data-binary @"$file" > /dev/null
 done
 
 
