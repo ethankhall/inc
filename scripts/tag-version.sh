@@ -21,5 +21,20 @@ BODY=`jq --null-input --argjson commits "$COMMITS" --arg message "${MESSAGE}" --
 echo "${BODY}" | curl -s -X POST -H "X-AUTH-TOKEN: ${AUTH_TOKEN}" -H "Content-Type: application/json" http://api.crom.tech/api/v1/project/ethankhall/repo/inc/version -d @-
 
 VERSION=`curl -s -H "Content-Type: application/json" http://api.crom.tech/api/v1/project/ethankhall/repo/inc/version/$SHA | jq -r '.version'`
-git tag "v$VERSION"
-git push --tags
+
+jq --null-input --arg MESSAGE "${MESSAGE}" --arg ID "${ID}" --arg EMAIL "${EMAIL}" 
+
+curl -u ethankhall:$GITHUB_API_TOKEN -X "POST" \
+    "https://api.github.com/repos/ethankhall/inc/git/tags?name=inc-darwin-0.1.3" \
+     -H "Content-Type: application/json; charset=utf-8" \
+     -d $'{
+  "message": "initial version\\n",
+  "object": "c3d0be41ecbe669545ee3e94d31ed9a4bc91ee3c",
+  "tagger": {
+    "name": "Scott Chacon",
+    "email": "schacon@gmail.com",
+    "date": "2011-06-17T14:53:35-07:00"
+  },
+  "type": "commit",
+  "tag": "v0.0.1"
+}'
