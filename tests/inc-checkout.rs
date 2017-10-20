@@ -15,15 +15,15 @@ mod checkout_integration {
     fn checkout_github_repo() {
         with_test_dir(|tmp_dir| {
             create_assert()
-                .with_args(&["checkout", "ethankhall/inc"])
+                .with_args(&["checkout", "github/choosealicense.com"])
                 .current_dir(tmp_dir.clone())
                 .succeeds()
                 .unwrap();
 
-            let inc_dir = tmp_dir.join("inc");
+            let inc_dir = tmp_dir.join("choosealicense");
             assert!(inc_dir.exists());
 
-            let inc_file = inc_dir.join("inc.toml");
+            let inc_file = inc_dir.join("README.md");
             assert!(inc_file.exists());
         });
     }
@@ -86,7 +86,7 @@ Args:
                 .mode(0o770)
                 .open(file_path)
                 .unwrap();
-            writeln!(tmp_file, "echo \"github.com/ethankhall/inc\"").expect("write temp file");
+            writeln!(tmp_file, "echo \"github.com/github/choosealicense.com\"").expect("write temp file");
 
             let new_path = format!("{}:{}", var("PATH").unwrap(), tmp_dir.to_str().unwrap());
 
@@ -135,7 +135,7 @@ Args:
                 .current_dir(tmp_dir.clone())
                 .unwrap();
 
-            assert!(tmp_dir.clone().join("inc").exists());
+            assert!(tmp_dir.clone().join("choosealicense").exists());
         });
     }
 }
