@@ -40,7 +40,7 @@ TAG_BODY=`jq --null-input --arg SUBJECT "${SUBJECT}" \
         "email": $AUTHOR_EMAIL, 
         "date": $COMMIT_TIME
       }
-    }'``
+    }'`
 
 curl -u ethankhall:$GITHUB_API_TOKEN -X "POST" \
     "https://api.github.com/repos/ethankhall/inc/git/tags?name=inc-darwin-0.1.3" \
