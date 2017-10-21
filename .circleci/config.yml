@@ -23,4 +23,7 @@ jobs:
       - run:
           name: Build All Variants
           command: ~/inc exec release
+      - run:
+          name: Tag Version
+          command: ./scripts/tag-version.sh
 
