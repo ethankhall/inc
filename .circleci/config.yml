@@ -9,7 +9,7 @@ jobs:
           command: rustup update
       - run:
           name: Install SSH
-          command: yaourt -S --noconfirm openssh
+          command: yaourt -S --noconfirm openssh jq
       - checkout
       - run:
           name: Build Initial Inc Binary
