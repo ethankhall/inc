@@ -6,7 +6,7 @@ pub(crate) mod util;
 use std::path::Path;
 
 pub const DEFAULT_CHECKOUT_SOURCE: &'static str = "github";
-pub const g: &'static [&'static str] = &["github", "bitbucket"];
+pub const PRE_DEFINED_CHECKOUT_SOURCES: &'static [&'static str] = &["github", "bitbucket"];
 
 pub type ScmUrl = String;
 
