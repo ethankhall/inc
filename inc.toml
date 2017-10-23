@@ -9,3 +9,7 @@ release = { commands = [
     "cargo build --target=x86_64-apple-darwin --release",
     "cargo build --target=x86_64-pc-windows-gnu --release"
 ] }
+
+[exec.build]
+commands = "cargo build"
+description = "Run a normal debug build"
