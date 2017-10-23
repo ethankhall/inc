@@ -74,9 +74,10 @@ pub fn execute_external_command(cmd: &PathBuf, args: &[String]) -> CliResult {
     };
 }
 
-pub fn execute_external_command_for_output(cmd: &PathBuf, args: &[String]) -> Result<String, CliError> {
+pub fn execute_external_command_for_output(cmd: &PathBuf, args: &[String], env: &HashMap<&str, &str>) -> Result<String, CliError> {
     let command_exe = format!("{}{}", cmd.to_str().unwrap(), env::consts::EXE_SUFFIX);
     let mut command = build_command(command_exe, args);
+    command.envs(env.into_iter());
     
     let output = command.output();
 

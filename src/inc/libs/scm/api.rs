@@ -8,6 +8,7 @@ pub fn build_url_from_service(
     service: String,
     user_input: String,
     command: &Vec<SystemBinary>,
+    use_ssh: bool,
 ) -> Result<ScmUrl, CheckoutError> {
     debug!("Origonal input: {}", service);
     let service_map = build_service_map(command);
@@ -15,7 +16,7 @@ pub fn build_url_from_service(
     let service = service.as_str();
 
     return match service_map.get(service) {
-        Some(svc) => svc.generate_url(user_input),
+        Some(svc) => svc.generate_url(user_input, use_ssh),
         None => Err(CheckoutError {
             error: format!("Unable to find determine how to execute {}", service),
         }),

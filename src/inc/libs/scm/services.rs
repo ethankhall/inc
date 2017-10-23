@@ -7,6 +7,7 @@ use core::BASE_APPLICATION_NAME;
 pub fn build_service_map(sub_commands: &Vec<SystemBinary>,) -> HashMap<String, Box<ScmService>> {
     let mut result: HashMap<String, Box<ScmService>> = HashMap::new();
     result.insert(String::from("github"), Box::new(GitHubScmService {}));
+    result.insert(String::from("bitbucket"), Box::new(BitBucketScmService {}));
 
     let service_prefix = format!("{}-checkout-service-", BASE_APPLICATION_NAME);
 
@@ -28,12 +29,34 @@ pub fn build_service_map(sub_commands: &Vec<SystemBinary>,) -> HashMap<String, B
 struct GitHubScmService {}
 
 impl ScmService for GitHubScmService {
-    fn generate_url(&self, user_input: String) -> Result<ScmUrl, CheckoutError> {
-        return Ok(format!("git@github.com:{0}.git", user_input));
+    fn generate_url(&self, user_input: String, use_ssh: bool) -> Result<ScmUrl, CheckoutError> {
+        return if use_ssh {
+            Ok(format!("git@github.com:{0}.git", user_input))
+        } else {
+            Ok(format!("https://github.com/{0}.git", user_input))
+        };
     }
 
     fn name(&self) -> String {
         return String::from("github");
+    }
+}
+
+#[derive(Debug)]
+struct BitBucketScmService {
+}
+
+impl ScmService for BitBucketScmService {
+    fn generate_url(&self, user_input: String, use_ssh: bool) -> Result<ScmUrl, CheckoutError> {
+        return if use_ssh {
+            Ok(format!("git@bitbucket.org:{0}.git", user_input))
+        } else {
+            Ok(format!("https://bitbucket.org/{0}.git", user_input))
+        };
+    }
+
+    fn name(&self) -> String {
+        return String::from("bitbucket");
     }
 }
 
@@ -55,8 +78,17 @@ impl ExternalScmService {
 }
 
 impl ScmService for ExternalScmService {
-    fn generate_url(&self, user_input: String) -> Result<ScmUrl, CheckoutError> {
-        let result = execute_external_command_for_output(&(self.binary.clone().path), &(vec![user_input]));
+    fn generate_url(&self, user_input: String, use_ssh: bool) -> Result<ScmUrl, CheckoutError> {
+        let use_ssh_env = if use_ssh {
+            "TRUE"
+        } else {
+            "FALSE"
+        };
+
+        let mut env = HashMap::new();
+        env.insert("INC_CHECKOUT_SSH", use_ssh_env);
+
+        let result = execute_external_command_for_output(&(self.binary.clone().path), &(vec![user_input]), &env);
 
         return match result {
             Ok(expr) => Ok(expr),

@@ -15,6 +15,7 @@ pub(crate) struct Options {
     flag_verbose: Option<String>,
     flag_service: Option<String>,
     flag_list: bool,
+    flag_https_only: bool
 }
 
 pub const USAGE: &'static str = "Usage:
@@ -30,6 +31,7 @@ Options:
   -q, --quiet                             No output printed to stdout.
   -h, --help                              Prints this message.
   -l, --list                              Lists all options for service.
+  --https-only                            Only do checkouts using http instead of ssh. [ default: false ]
 
 Args:
   <repository>    The (possibly remote) repository to clone from.
@@ -90,6 +92,7 @@ pub(crate) fn execute(options: Options) -> CliResult {
         service,
         repository,
         &sub_commands,
+        !options.flag_https_only
     );
 
     if let Err(e) = url {

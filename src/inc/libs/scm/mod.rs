@@ -6,7 +6,7 @@ pub(crate) mod util;
 use std::path::Path;
 
 pub const DEFAULT_CHECKOUT_SOURCE: &'static str = "github";
-pub const PRE_DEFINED_CHECKOUT_SOURCES: &'static [&'static str] = &["github"];
+pub const g: &'static [&'static str] = &["github", "bitbucket"];
 
 pub type ScmUrl = String;
 
@@ -22,6 +22,6 @@ pub struct CheckoutError {
 }
 
 pub trait ScmService {
-    fn generate_url(&self, user_input: String) -> Result<ScmUrl, CheckoutError>;
+    fn generate_url(&self, user_input: String, use_ssh: bool) -> Result<ScmUrl, CheckoutError>;
     fn name(&self) -> String;
 }
