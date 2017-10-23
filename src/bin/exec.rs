@@ -60,6 +60,9 @@ pub(crate) fn execute(options: Options) -> CliResult {
     let config = exec_configs.commands.get(&command).unwrap();
     for command_entry in config.clone().commands.into_iter() {
 
+        if config.clone().commands.len() > 1 {
+            info!("** Executing `{}`", command_entry);
+        }
         let mut command_list: Vec<String> = command_entry.split(" ").map(|x| String::from(x)).collect();
         let command_exec = command_list.remove(0);
         
