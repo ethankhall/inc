@@ -57,6 +57,7 @@ Options:
   -q, --quiet                             No output printed to stdout.
   -h, --help                              Prints this message.
   -l, --list                              Lists all options for service.
+  --https-only                            Only do checkouts using http instead of ssh. [ default: false ]
 
 Args:
   <repository>    The (possibly remote) repository to clone from.
@@ -70,7 +71,7 @@ Args:
             .with_args(&["checkout", "--list"])
             .succeeds()
             .and()
-            .stdout().contains("Services:\n - github\t[default]")
+            .stdout().contains("Services:\n - bitbucket\n - github\t[default]")
             .unwrap();
     }
 
@@ -95,7 +96,7 @@ Args:
             .with_env(&[("PATH", new_path)])
             .succeeds()
             .and()
-            .stdout().contains("Services:\n - foobar\n - github\t[default]")
+            .stdout().contains("Services:\n - bitbucket\n - foobar\n - github\t[default]")
             .unwrap();
         });
     }

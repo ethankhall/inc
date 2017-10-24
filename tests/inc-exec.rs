@@ -94,7 +94,11 @@ mod exec_integration {
                 .succeeds()
                 .and()
                 .stderr().is("")
-                .stdout().contains("Hello World\nGoodbye World!\n")
+                .stdout().contains("** Executing `echo \"Hello World\"`
+Hello World
+** Executing `echo \"Goodbye World!\"`
+Goodbye World!
+")
                 .unwrap();
         });
     }

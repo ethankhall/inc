@@ -1,6 +1,5 @@
 [exec]
 ci = { commands = [
-    "env",
     "cargo build",
     "cargo test"
  ] }
