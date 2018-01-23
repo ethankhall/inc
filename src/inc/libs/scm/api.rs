@@ -23,12 +23,15 @@ pub fn build_url_from_service(
     };
 }
 
+pub fn build_scm_providers() -> Vec<&'static ScmProvier> {
+    return vec![&GitScm { }]
+}
+
 pub fn checkout(
     repo_url: &ScmUrl,
     destination: Option<String>,
+    providers: Vec<&ScmProvier>
 ) -> Result<i32, CheckoutError> {
-    let git_provider = GitScm { };
-    let providers: Vec<&ScmProvier> = vec![&git_provider];
 
     let scm_provider = providers.into_iter().find(|x| x.handles_url(repo_url));
     if scm_provider.is_none() {

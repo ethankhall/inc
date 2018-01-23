@@ -1,6 +1,6 @@
 use inc::core::command::CommandContainer;
 use inc::core::config::ConfigContainer;
-use inc::libs::scm::api::{build_url_from_service, checkout};
+use inc::libs::scm::api::{build_url_from_service, checkout, build_scm_providers};
 use inc::core::BASE_APPLICATION_NAME;
 use std::collections::HashSet;
 use inc::libs::scm::{PRE_DEFINED_CHECKOUT_SOURCES, DEFAULT_CHECKOUT_SOURCE};
@@ -88,12 +88,17 @@ pub(crate) fn execute(options: Options) -> CliResult {
         destination
     );
 
-    let url = build_url_from_service(
-        service,
-        repository,
-        &sub_commands,
-        !options.flag_https_only
-    );
+    let scm_providers = build_scm_providers();
+
+    let url = if scm_providers.clone().into_iter().any(|x| x.handles_url(&repository)) {
+        Ok(repository)
+    } else {
+        build_url_from_service(
+            service,
+            repository,
+            &sub_commands,
+            !options.flag_https_only)
+    };
 
     if let Err(e) = url {
         debug!("Error building URL: {:?}", e);
@@ -105,7 +110,7 @@ pub(crate) fn execute(options: Options) -> CliResult {
 
     debug!("Url to checkout is: {:?}", url);
 
-    let result = checkout(&url, destination);
+    let result = checkout(&url, destination, scm_providers);
 
     trace!("Results from checkout: {:?}", result);
     if result.is_err() {

@@ -10,7 +10,7 @@ pub const PRE_DEFINED_CHECKOUT_SOURCES: &'static [&'static str] = &["github", "b
 
 pub type ScmUrl = String;
 
-pub(crate) trait ScmProvier {
+pub trait ScmProvier {
     fn sugested_checkout_name(&self, url: &ScmUrl) -> Option<String>;
     fn do_checkout(&self, url: &ScmUrl, destination: &Path) -> Result<i32, CheckoutError>;
     fn handles_url(&self, url: &ScmUrl) -> bool;

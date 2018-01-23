@@ -12,7 +12,7 @@ pub fn configure_logging(verbose: i32, warn: bool, quite: bool) {
     } else {
         verbose + 2
     };
-    
+
     let level = log_level(level);
     let dispatch = Dispatch::new();
     
