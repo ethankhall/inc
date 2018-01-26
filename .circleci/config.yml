@@ -8,6 +8,9 @@ jobs:
           name: Update Rust
           command: rustup update
       - run:
+          name: Update System Cache
+          command: yaourt -Sy
+      - run:
           name: Install SSH
           command: yaourt -S --noconfirm openssh jq
       - checkout
