@@ -1,6 +1,6 @@
 [package]
 name = "inc-core"
-version = "0.1.9999-DEV"
+version = "0.1.4"
 authors = ["Ethan Hall <ethan@ehdev.io>"]
 
 [lib]
