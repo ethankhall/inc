@@ -34,7 +34,14 @@ mod checkout_integration {
             .with_args(&["checkout"])
             .fails()
             .and()
-            .stderr().contains("No repository specified. Review `inc checkout --help` for options.")
+            .stderr()
+            .contains("error: The following required arguments were not provided:
+    <repository>
+
+USAGE:
+    inc checkout [FLAGS] [OPTIONS] <repository> [directory]
+
+For more information try --help")
             .unwrap();
     }
 
@@ -44,41 +51,42 @@ mod checkout_integration {
             .with_args(&["checkout", "--help"])
             .succeeds()
             .and()
-            .stdout().contains("Usage:
-  inc-checkout [options] <repository> [<directory>]
-  inc-checkout <repository> [<directory>]
-  inc-checkout [options]
-  inc-checkout (-h | --help)
+            .stdout().contains("Checkout from SCM
 
-Options:
-  -s <service>, --service=<service>       Where to checkout from. A lot of cases will be github.
-  -v, --verbose ...                       Increasing verbosity.
-  -w, --warn                              Only display warning messages.
-  -q, --quiet                             No output printed to stdout.
-  -h, --help                              Prints this message.
-  -l, --list                              Lists all options for service.
-  --https-only                            Only do checkouts using http instead of ssh. [ default: false ]
+USAGE:
+    inc checkout [FLAGS] [OPTIONS] <repository> [directory]
 
-Args:
-  <repository>    The (possibly remote) repository to clone from.
-  <directory>     Clones a repository into a newly created directory.")
+FLAGS:
+    -h, --help             Prints help information
+        --https-only       Only do checkouts using http instead of ssh.
+        --list-services    List all of the avaliable services.
+    -q, --quite            Only error output will be displayed
+    -v, --verbose          Increasing verbosity
+    -w, --warn             Only display warning messages
+
+OPTIONS:
+    -s, --service <service>    Where to checkout from. A lot of cases will be github.
+
+ARGS:
+    <repository>    The (possibly remote) repository to clone from.
+    <directory>     Clones a repository into a newly created directory.")
             .unwrap();
     }
 
     #[test]
     fn checkout_list_internal() {
         create_assert()
-            .with_args(&["checkout", "--list"])
+            .with_args(&["checkout", "--list-services"])
             .succeeds()
             .and()
-            .stdout().contains("Services:\n - bitbucket\n - github\t[default]")
+            .stdout()
+            .contains("Services:\n - bitbucket\n - github\t[default]")
             .unwrap();
     }
 
     #[test]
     fn checkout_list_with_external() {
         with_test_dir(|tmp_dir| {
-
             let file_path = tmp_dir.clone().join("inc-checkout-service-foobar");
             let file_path = file_path.to_str().unwrap();
             let mut tmp_file = fs::OpenOptions::new()
@@ -87,17 +95,19 @@ Args:
                 .mode(0o770)
                 .open(file_path)
                 .unwrap();
-            writeln!(tmp_file, "echo \"github.com/github/choosealicense.com\"").expect("write temp file");
+            writeln!(tmp_file, "echo \"github.com/github/choosealicense.com\"")
+                .expect("write temp file");
 
             let new_path = format!("{}:{}", var("PATH").unwrap(), tmp_dir.to_str().unwrap());
 
             create_assert()
-            .with_args(&["-vvv", "checkout", "--list"])
-            .with_env(&[("PATH", new_path)])
-            .succeeds()
-            .and()
-            .stdout().contains("Services:\n - bitbucket\n - foobar\n - github\t[default]")
-            .unwrap();
+                .with_args(&["-vvv", "checkout", "--list-services"])
+                .with_env(&[("PATH", new_path)])
+                .succeeds()
+                .and()
+                .stdout()
+                .contains("Services:\n - bitbucket\n - foobar\n - github\t[default]")
+                .unwrap();
         });
     }
 
@@ -112,7 +122,13 @@ Args:
             let new_path = format!("{}:{}", var("PATH").unwrap(), tmp_dir.to_str().unwrap());
 
             create_assert()
-                .with_args(&["-vvv", "checkout", "--service=foobar", "something-random", checkout_dir.to_str().unwrap()])
+                .with_args(&[
+                    "-vvv",
+                    "checkout",
+                    "--service=foobar",
+                    "something-random",
+                    checkout_dir.to_str().unwrap(),
+                ])
                 .with_env(&[("PATH", new_path)])
                 .succeeds()
                 .unwrap();

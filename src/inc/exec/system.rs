@@ -12,10 +12,7 @@ pub struct SystemExecution {
 impl Execution<i32> for SystemExecution {
     fn execute(&self, args: &Vec<String>) -> Result<i32, String> {
         let mut command = Command::new(self.command.clone());
-        let swawn = command
-            .args(args)
-            .envs(build_env_updates())
-            .spawn();
+        let swawn = command.args(args).envs(build_env_updates()).spawn();
 
         if let Err(value) = swawn {
             return Err(format!("Unable to execute command: {}", value));
@@ -38,10 +35,7 @@ pub struct OutputCapturingSystemExecution {
 impl Execution<String> for OutputCapturingSystemExecution {
     fn execute(&self, args: &Vec<String>) -> Result<String, String> {
         let mut command = Command::new(self.command.clone());
-        let output = command
-            .args(args)
-            .envs(build_env_updates())
-            .output();
+        let output = command.args(args).envs(build_env_updates()).output();
 
         if let Err(value) = output {
             return Err(format!("Unable to execute command: {}", value));
@@ -58,8 +52,7 @@ impl Execution<String> for OutputCapturingSystemExecution {
             }
             return Err(format!(
                 "Unable to run {:?} it returned {}",
-                args,
-                output.status
+                args, output.status
             ));
         }
 

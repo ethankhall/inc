@@ -13,7 +13,20 @@ mod exec_integration {
             .with_args(&["exec"])
             .fails()
             .and()
-            .stderr().contains("Option or command must be passed! Run inc exec --help for options.")
+            .stderr()
+            .contains("
+USAGE:
+    inc exec [FLAGS] <command>
+
+FLAGS:
+    -h, --help             Prints help information
+        --list-commands    List all of the avaliable commands.
+    -q, --quite            Only error output will be displayed
+    -v, --verbose          Increasing verbosity
+    -w, --warn             Only display warning messages
+
+ARGS:
+    <command>    Name of the command to execute.")
             .unwrap();
     }
 
@@ -24,12 +37,15 @@ mod exec_integration {
             copy_resource("sample1.toml", file_path);
 
             create_assert()
-                .with_args(&["-vvv", "exec", "--list"])
+                .with_args(&["-vvv", "exec", "--list-commands"])
                 .current_dir(tmp_dir.clone())
                 .succeeds()
                 .and()
-                .stderr().is("")
-                .stdout().contains("Avaliable Commands:
+                .stderr()
+                .is("")
+                .stdout()
+                .contains(
+                    "Avaliable Commands:
  - name: build
    description: Build the project
    commands:
@@ -37,7 +53,8 @@ mod exec_integration {
  - name: run
    description: No Description Provided
    commands:
-     - echo \"Goodbye World!\"")
+     - echo \"Goodbye World!\"",
+                )
                 .unwrap();
         });
     }
@@ -53,17 +70,21 @@ mod exec_integration {
                 .current_dir(tmp_dir.clone())
                 .succeeds()
                 .and()
-                .stderr().is("")
-                .stdout().contains("Hello World")
+                .stderr()
+                .is("")
+                .stdout()
+                .contains("Hello World")
                 .unwrap();
-            
+
             create_assert()
                 .with_args(&["-vvv", "exec", "run"])
                 .current_dir(tmp_dir.clone())
                 .succeeds()
                 .and()
-                .stderr().is("")
-                .stdout().contains("Goodbye World!")
+                .stderr()
+                .is("")
+                .stdout()
+                .contains("Goodbye World!")
                 .unwrap();
         });
     }
@@ -75,17 +96,21 @@ mod exec_integration {
             copy_resource("sample2.toml", file_path);
 
             create_assert()
-                .with_args(&["-vvv", "exec", "--list"])
+                .with_args(&["-vvv", "exec", "--list-commands"])
                 .current_dir(tmp_dir.clone())
                 .succeeds()
                 .and()
-                .stderr().is("")
-                .stdout().contains("Avaliable Commands:
+                .stderr()
+                .is("")
+                .stdout()
+                .contains(
+                    "Avaliable Commands:
  - name: build
    description: Build the project
    commands:
      - echo \"Hello World\"
-     - echo \"Goodbye World!\"")
+     - echo \"Goodbye World!\"",
+                )
                 .unwrap();
 
             create_assert()
@@ -93,12 +118,16 @@ mod exec_integration {
                 .current_dir(tmp_dir.clone())
                 .succeeds()
                 .and()
-                .stderr().is("")
-                .stdout().contains("** Executing `echo \"Hello World\"`
+                .stderr()
+                .is("")
+                .stdout()
+                .contains(
+                    "** Executing `echo \"Hello World\"`
 Hello World
 ** Executing `echo \"Goodbye World!\"`
 Goodbye World!
-")
+",
+                )
                 .unwrap();
         });
     }
@@ -110,18 +139,22 @@ Goodbye World!
             copy_resource("sample3.toml", file_path);
 
             create_assert()
-                .with_args(&["-vvv", "exec", "--list"])
+                .with_args(&["-vvv", "exec", "--list-commands"])
                 .current_dir(tmp_dir.clone())
                 .succeeds()
                 .and()
-                .stderr().is("")
-                .stdout().contains("Avaliable Commands:
+                .stderr()
+                .is("")
+                .stdout()
+                .contains(
+                    "Avaliable Commands:
  - name: build
    description: This should fail, due to the false.
    commands:
      - echo \"Hello World\"
      - false
-     - echo \"Goodbye World!\"")
+     - echo \"Goodbye World!\"",
+                )
                 .unwrap();
 
             create_assert()
@@ -129,8 +162,10 @@ Goodbye World!
                 .current_dir(tmp_dir.clone())
                 .fails()
                 .and()
-                .stderr().is("Command: `false` returned 1")
-                .stdout().contains("Hello World\n")
+                .stderr()
+                .is("Command: `false` returned 1")
+                .stdout()
+                .contains("Hello World\n")
                 .unwrap();
         });
     }

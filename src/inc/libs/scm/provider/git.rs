@@ -1,29 +1,27 @@
 use std::collections::LinkedList;
 use std::process::Command;
 use std::path::Path;
-use libs::scm::{ScmUrl, CheckoutError, ScmProvier};
+use libs::scm::{CheckoutError, ScmProvier, ScmUrl};
 use regex::RegexSet;
 use url::Url;
 
 #[derive(Debug, Clone)]
-pub struct GitScm {
-}
+pub struct GitScm {}
 
-pub(crate) const GIT_URL_REGEX: &'static [&'static str] =
-    &[
-        // => ssh://[user@]host.xz[:port]/path/to/repo.git/
-        r"ssh://((.*@)?)([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
-        // => git://host.xz[:port]/path/to/repo.git/
-        r"git://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
-        // => http[s]://host.xz[:port]/path/to/repo.git/
-        r"http(s?)://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
-        // => ftp[s]://host.xz[:port]/path/to/repo.git/
-        r"ftp(s?)://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
-        // => /path/to/repo.git/
-        r"/(.+?)(\.git(/)?)",
-        // => file:///path/to/repo.git/
-        r"file:///(.+?)(\.git(/)?)",
-    ];
+pub(crate) const GIT_URL_REGEX: &'static [&'static str] = &[
+    // => ssh://[user@]host.xz[:port]/path/to/repo.git/
+    r"ssh://((.*@)?)([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
+    // => git://host.xz[:port]/path/to/repo.git/
+    r"git://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
+    // => http[s]://host.xz[:port]/path/to/repo.git/
+    r"http(s?)://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
+    // => ftp[s]://host.xz[:port]/path/to/repo.git/
+    r"ftp(s?)://([a-zA-Z0-9\\-\\.]+)((:[0-9]+)?)/(.+?)(\.git(/)?)",
+    // => /path/to/repo.git/
+    r"/(.+?)(\.git(/)?)",
+    // => file:///path/to/repo.git/
+    r"file:///(.+?)(\.git(/)?)",
+];
 
 impl ScmProvier for GitScm {
     fn sugested_checkout_name(&self, url: &ScmUrl) -> Option<String> {
@@ -41,15 +39,18 @@ impl ScmProvier for GitScm {
         args.push_back((*destination).to_str().unwrap().to_string());
 
         trace!("About to execute {:?}", args);
-        let mut git_command = Command::new("git").args(args).spawn().expect(
-            "failed to execute process",
-        );
+        let mut git_command = Command::new("git")
+            .args(args)
+            .spawn()
+            .expect("failed to execute process");
 
         let exit_status = git_command.wait().expect("failed to wait on child");
 
         return match exit_status.code() {
             Some(code) => Ok(code),
-            None => Err(CheckoutError { error: String::from("Unknown Error") }),
+            None => Err(CheckoutError {
+                error: String::from("Unknown Error"),
+            }),
         };
     }
 

@@ -1,19 +1,19 @@
-use docopt::Docopt;
 use std::env::{self, current_exe, var};
 use std::process::Command;
 use std::collections::HashMap;
 use std::path::PathBuf;
-use serde::Deserialize;
-use std::fmt::Debug;
 
 pub struct CliError {
     pub code: i32,
-    pub message: String
+    pub message: String,
 }
 
 impl CliError {
     pub fn new(code: i32, message: String) -> Self {
-        CliError { code: code, message: message }
+        CliError {
+            code: code,
+            message: message,
+        }
     }
 }
 
@@ -21,9 +21,9 @@ pub type CliResult = Result<i32, CliError>;
 
 pub type CliParseResults = Result<(), CliParseError>;
 
-pub struct CliParseError { 
+pub struct CliParseError {
     pub fatal: bool,
-    pub message: String
+    pub message: String,
 }
 
 impl From<CliParseError> for CliError {
@@ -32,57 +32,46 @@ impl From<CliParseError> for CliError {
     }
 }
 
-pub fn call_main_without_stdin<'de, Flags: Debug + Deserialize<'de>>(
-            exec: fn(Flags) -> CliResult,
-            usage: &str,
-            args: &Vec<String>) -> CliResult
-{
-    trace!("Arguments to be passed into sub-command: {:?}", args);
-    let docopt = Docopt::new(usage).unwrap()
-        .argv(args.clone())
-        .options_first(true)
-        .help(false);
-
-    // trace!("Options: {:?}", docopt);
-
-    let flags = docopt.deserialize().map_err(|e| {
-        CliParseError { fatal: e.fatal(), message: e.to_string() }
-    })?;
-
-    trace!("CLI Flags: {:?}", flags);
-
-    exec(flags)
-}
-
 pub fn execute_external_command(cmd: &PathBuf, args: &[String]) -> CliResult {
     let command_exe = format!("{:?}{}", cmd.to_str().unwrap(), env::consts::EXE_SUFFIX);
     let mut command = build_command(command_exe, args);
 
-    let swawn = command
-        .envs(build_env_updates())
-        .spawn();
+    let swawn = command.envs(build_env_updates()).spawn();
 
     if let Err(value) = swawn {
-        return Err(CliError { code: 10, message: format!("Unable to execute command: {}", value) });
+        return Err(CliError {
+            code: 10,
+            message: format!("Unable to execute command: {}", value),
+        });
     }
 
     let output = swawn.unwrap().wait();
 
     return match output {
         Ok(code) => Ok(code.code().unwrap_or_else(|| 0)),
-        Err(value) => Err(CliError { code: 10, message: format!("Unable to run {:?} it returned {}", args, value) }),
+        Err(value) => Err(CliError {
+            code: 10,
+            message: format!("Unable to run {:?} it returned {}", args, value),
+        }),
     };
 }
 
-pub fn execute_external_command_for_output(cmd: &PathBuf, args: &[String], env: &HashMap<&str, &str>) -> Result<String, CliError> {
+pub fn execute_external_command_for_output(
+    cmd: &PathBuf,
+    args: &[String],
+    env: &HashMap<&str, &str>,
+) -> Result<String, CliError> {
     let command_exe = format!("{}{}", cmd.to_str().unwrap(), env::consts::EXE_SUFFIX);
     let mut command = build_command(command_exe, args);
     command.envs(env.into_iter());
-    
+
     let output = command.output();
 
     if let Err(value) = output {
-        return Err(CliError { code: 12, message: format!("Unable to execute command: {}", value) })
+        return Err(CliError {
+            code: 12,
+            message: format!("Unable to execute command: {}", value),
+        });
     }
 
     let output = output.unwrap();
@@ -94,11 +83,10 @@ pub fn execute_external_command_for_output(cmd: &PathBuf, args: &[String], env: 
         for line in String::from_utf8_lossy(&output.stderr).to_string().lines() {
             error!("ERR: {}", line);
         }
-        return Err(CliError { code: 12, message: format!(
-            "Unable to run {:?} it returned {}",
-            args,
-            output.status
-        ) });
+        return Err(CliError {
+            code: 12,
+            message: format!("Unable to run {:?} it returned {}", args, output.status),
+        });
     }
 
     return Ok(String::from_utf8_lossy(&output.stdout).trim().to_string());
@@ -113,9 +101,7 @@ fn build_command(cmd: String, args: &[String]) -> Box<Command> {
     }
 
     let mut command = build_cmd_for_platform();
-    command
-        .arg(command_string)
-        .envs(build_env_updates());
+    command.arg(command_string).envs(build_env_updates());
 
     return Box::from(command);
 }

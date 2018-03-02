@@ -6,7 +6,7 @@ use toml::value::Table;
 use toml::de::Error;
 use std::fs::File;
 use std::io::prelude::*;
-use std::collections::{HashMap, BTreeMap};
+use std::collections::{BTreeMap, HashMap};
 
 #[derive(Debug, Clone)]
 pub struct ConfigContainer {
@@ -16,7 +16,7 @@ pub struct ConfigContainer {
 
 #[derive(Debug, Clone)]
 pub struct CheckoutConfig {
-    pub default: Option<String>
+    pub default: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -28,7 +28,7 @@ pub struct ExecCommandConfig {
 
 #[derive(Debug, Clone)]
 pub struct ExecConfig {
-    pub commands: HashMap<String, ExecCommandConfig>
+    pub commands: HashMap<String, ExecCommandConfig>,
 }
 
 pub const NO_DESCRIPTION: &'static str = "No Description Provided";
@@ -67,11 +67,12 @@ impl ConfigContainer {
             }
         }
 
-        return ExecConfig { commands: command_map };
+        return ExecConfig {
+            commands: command_map,
+        };
     }
 
     pub fn get_checkout_configs(&self) -> CheckoutConfig {
-
         if self.home_config.is_empty() {
             return CheckoutConfig { default: None };
         }
@@ -88,11 +89,15 @@ impl ConfigContainer {
         }
 
         let checkout_default = checkout_default.unwrap().as_str().map(|y| String::from(y));
-        return CheckoutConfig { default: checkout_default };
+        return CheckoutConfig {
+            default: checkout_default,
+        };
     }
 }
 
-pub(crate) fn prase_exec_table(config_entry: Option<&BTreeMap<String, Value>>) -> HashMap<String, ExecCommandConfig> {
+pub(crate) fn prase_exec_table(
+    config_entry: Option<&BTreeMap<String, Value>>,
+) -> HashMap<String, ExecCommandConfig> {
     let mut command_map: HashMap<String, ExecCommandConfig> = HashMap::new();
 
     if config_entry.is_none() {
@@ -104,7 +109,11 @@ pub(crate) fn prase_exec_table(config_entry: Option<&BTreeMap<String, Value>>) -
         let command_entry = config_entry.get(config_key).unwrap();
         let command_table = command_entry.as_table();
         if command_table.is_none() {
-            debug!("{} was not a table, but instead was {}", config_key, command_entry.type_str());
+            debug!(
+                "{} was not a table, but instead was {}",
+                config_key,
+                command_entry.type_str()
+            );
             continue;
         }
 
@@ -115,16 +124,26 @@ pub(crate) fn prase_exec_table(config_entry: Option<&BTreeMap<String, Value>>) -
             continue;
         }
         let commands = commands.unwrap();
-        
-        let ignore_failures: bool = command_table.get("ignore_failures")
-            .unwrap_or_else(|| &Value::Boolean(false))
-            .as_bool().unwrap_or_else(|| false);
 
-        let description: String = command_table.get("description")
-            .map_or_else(|| NO_DESCRIPTION, |x| x.as_str().unwrap_or_else(|| NO_DESCRIPTION))
+        let ignore_failures: bool = command_table
+            .get("ignore_failures")
+            .unwrap_or_else(|| &Value::Boolean(false))
+            .as_bool()
+            .unwrap_or_else(|| false);
+
+        let description: String = command_table
+            .get("description")
+            .map_or_else(
+                || NO_DESCRIPTION,
+                |x| x.as_str().unwrap_or_else(|| NO_DESCRIPTION),
+            )
             .to_string();
 
-        let config = ExecCommandConfig { commands: commands, ignore_failures: ignore_failures, description: description };
+        let config = ExecCommandConfig {
+            commands: commands,
+            ignore_failures: ignore_failures,
+            description: description,
+        };
         command_map.insert(config_key.clone(), config);
     }
 
@@ -139,14 +158,21 @@ pub(crate) fn get_commands_from_table(key: String, table: &Table) -> Option<Vec<
         }
 
         if commands.is_array() {
-            return Some(commands.as_array()
-                .unwrap()
-                .iter()
-                .map(|x| String::from(x.as_str().unwrap()))
-                .collect());
+            return Some(
+                commands
+                    .as_array()
+                    .unwrap()
+                    .iter()
+                    .map(|x| String::from(x.as_str().unwrap()))
+                    .collect(),
+            );
         }
 
-        error!("{} was supposed to be an array or string, but was {}", key, commands.type_str());
+        error!(
+            "{} was supposed to be an array or string, but was {}",
+            key,
+            commands.type_str()
+        );
         return None;
     } else {
         return None;
@@ -173,14 +199,15 @@ fn collapse_the_configs(config_files: Vec<PathBuf>) -> Vec<Value> {
 fn parse_config_file(path: &PathBuf) -> Result<Value, Error> {
     let mut file = File::open(path).expect("Unable to open the file");
     let mut contents = String::new();
-    file.read_to_string(&mut contents).expect("Unable to read the file");
+    file.read_to_string(&mut contents)
+        .expect("Unable to read the file");
     let parsed = contents.parse::<Value>();
     return parsed;
 }
 
 /**
-  * Checks to see if either the yaml or yml file exists.
-  */
+ * Checks to see if either the yaml or yml file exists.
+ */
 fn config_file(prefix: &'static str, path: PathBuf) -> Option<PathBuf> {
     let config_search = path.join(format!("{}inc.toml", prefix));
     if config_search.exists() {

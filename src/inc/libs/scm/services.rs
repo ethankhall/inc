@@ -1,28 +1,21 @@
-use libs::scm::{ScmUrl, ScmService, CheckoutError};
+use libs::scm::{CheckoutError, ScmService, ScmUrl};
 use libs::process::SystemBinary;
 use exec::executor::execute_external_command_for_output;
 use std::collections::HashMap;
 use core::BASE_APPLICATION_NAME;
+use core::command::AvaliableCommands;
 
-pub fn build_service_map(sub_commands: &Vec<SystemBinary>,) -> HashMap<String, Box<ScmService>> {
+pub fn build_service_map(sub_commands: &AvaliableCommands) -> HashMap<String, Box<ScmService>> {
     let mut result: HashMap<String, Box<ScmService>> = HashMap::new();
     result.insert(String::from("github"), Box::new(GitHubScmService {}));
     result.insert(String::from("bitbucket"), Box::new(BitBucketScmService {}));
 
-    let service_prefix = format!("{}-checkout-service-", BASE_APPLICATION_NAME);
-
-    for external_source in sub_commands.into_iter() {
-        trace!("external_source: {:?}", external_source);
-        if external_source.name.starts_with(service_prefix.as_str()) {
-            let service_name = String::from(&external_source.name[(service_prefix.len())..]);
-            let service = ExternalScmService::new(
-                external_source.clone(),
-                service_name.clone(),
-            );
-            result.insert(service_name, Box::new(service));
-        }
-    }
-
+    let service_commands = sub_commands
+        .find_commands_with_parent(format!("{}-checkout-service", BASE_APPLICATION_NAME));
+    service_commands.into_iter().for_each(|command| {
+        let service = ExternalScmService::new(command.binary(), command.name());
+        result.insert(command.name(), Box::new(service));
+    });
     return result;
 }
 
@@ -43,8 +36,7 @@ impl ScmService for GitHubScmService {
 }
 
 #[derive(Debug)]
-struct BitBucketScmService {
-}
+struct BitBucketScmService {}
 
 impl ScmService for BitBucketScmService {
     fn generate_url(&self, user_input: String, use_ssh: bool) -> Result<ScmUrl, CheckoutError> {
@@ -66,10 +58,7 @@ struct ExternalScmService {
 }
 
 impl ExternalScmService {
-    fn new(
-        binary: SystemBinary,
-        service_name: String,
-    ) -> ExternalScmService {
+    fn new(binary: SystemBinary, service_name: String) -> ExternalScmService {
         ExternalScmService {
             binary: binary,
             service_name: service_name,
@@ -79,20 +68,22 @@ impl ExternalScmService {
 
 impl ScmService for ExternalScmService {
     fn generate_url(&self, user_input: String, use_ssh: bool) -> Result<ScmUrl, CheckoutError> {
-        let use_ssh_env = if use_ssh {
-            "TRUE"
-        } else {
-            "FALSE"
-        };
+        let use_ssh_env = if use_ssh { "TRUE" } else { "FALSE" };
 
         let mut env = HashMap::new();
         env.insert("INC_CHECKOUT_SSH", use_ssh_env);
 
-        let result = execute_external_command_for_output(&(self.binary.clone().path), &(vec![user_input]), &env);
+        let result = execute_external_command_for_output(
+            &(self.binary.clone().path),
+            &(vec![user_input]),
+            &env,
+        );
 
         return match result {
             Ok(expr) => Ok(expr),
-            Err(value) => Err(CheckoutError { error: value.message }),
+            Err(value) => Err(CheckoutError {
+                error: value.message,
+            }),
         };
     }
 

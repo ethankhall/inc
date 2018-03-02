@@ -15,8 +15,8 @@ But these are only examples. `inc` is intended to be flexible enough for teams t
 While `inc` doesn't come with AA batteries, it comes with the the coin-cell to get you going. There are several commands that will come with `inc`. You're free to use one, some, all or none of them. The default commands are:
 - checkout
 - exec
-- env-check
-- toolkit
+- env-check (planned)
+- toolkit (planned)
 
 ### Checkout
 `inc checkout ethankhall/inc` will determine how to checkout that project. By default, `inc` will attempt to checkout from github. At the moment it's not very smart and will only use what it's told to on the command line, defaulting to github.
@@ -42,7 +42,7 @@ Here we give `inc` the command to run as a string, it could also be a list when 
 
 ### Env-Check
 
-> This is a work in progress, and is not finished.
+> This planned, and is not finished.
 
 The `env-check` command gives teams an easy way to validate that the machine they are using has the needed infrastructure available. 
 
@@ -55,7 +55,7 @@ Some common tools to validate are:
 
 ### Toolkit
 
-> This is a work in progress, and is not finished.
+> This planned, and is not finished.
 
 The `toolkit` command is a place that I've put things that I use often enough that I don't want to have to look them up every time.
 

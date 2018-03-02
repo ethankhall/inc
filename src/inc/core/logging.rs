@@ -1,8 +1,8 @@
-use std::io::{stdout, stderr};
+use std::io::{stderr, stdout};
 use chrono::Local;
 
 use fern::Dispatch;
-use log::{LogLevelFilter, LogLevel};
+use log::{LogLevel, LogLevelFilter};
 
 pub fn configure_logging(verbose: i32, warn: bool, quite: bool) {
     let level = if quite {
@@ -15,18 +15,20 @@ pub fn configure_logging(verbose: i32, warn: bool, quite: bool) {
 
     let level = log_level(level);
     let dispatch = Dispatch::new();
-    
+
     let result = configure_logging_output(level, dispatch)
-    .level(level)
-    .chain(
-        Dispatch::new()
-            .filter(|log_meta| LogLevel::Warn <= log_meta.level())
-            .chain(stdout()))
-    .chain(
-        Dispatch::new()
-            .filter(|log_meta| LogLevel::Error == log_meta.level())
-            .chain(stderr()))
-    .apply();
+        .level(level)
+        .chain(
+            Dispatch::new()
+                .filter(|log_meta| LogLevel::Warn <= log_meta.level())
+                .chain(stdout()),
+        )
+        .chain(
+            Dispatch::new()
+                .filter(|log_meta| LogLevel::Error == log_meta.level())
+                .chain(stderr()),
+        )
+        .apply();
 
     if result.is_err() {
         panic!("Logger already initialized...");
@@ -47,23 +49,24 @@ fn configure_logging_output(logging_level: LogLevelFilter, dispatch: Dispatch) -
     if logging_level == LogLevelFilter::Trace {
         return dispatch.format(|out, message, record| {
             out.finish(format_args!(
-            "{}[{}][{}] {}",
-            Local::now().format("[%Y-%m-%d - %H:%M:%S]"),
-            record.target(),
-            record.level(),
-            message))
+                "{}[{}][{}] {}",
+                Local::now().format("[%Y-%m-%d - %H:%M:%S]"),
+                record.target(),
+                record.level(),
+                message
+            ))
         });
-    } if logging_level == LogLevelFilter::Debug {
+    }
+    if logging_level == LogLevelFilter::Debug {
         return dispatch.format(|out, message, record| {
             out.finish(format_args!(
-            "{}[{}] {}",
-            Local::now().format("[%Y-%m-%d - %H:%M:%S]"),
-            record.level(),
-            message))
+                "{}[{}] {}",
+                Local::now().format("[%Y-%m-%d - %H:%M:%S]"),
+                record.level(),
+                message
+            ))
         });
-    } else { 
-        return dispatch.format(|out, message, _record| {
-            out.finish(format_args!("{}", message))
-        });
+    } else {
+        return dispatch.format(|out, message, _record| out.finish(format_args!("{}", message)));
     }
 }

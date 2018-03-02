@@ -6,7 +6,9 @@ pub mod test {
     #[test]
     fn test_can_find_single_command() {
         let foo_commands = "[foo]
-        commands = 'bar'".parse::<Value>().unwrap();
+        commands = 'bar'"
+            .parse::<Value>()
+            .unwrap();
         let foo_commands = foo_commands.as_table();
 
         let results = prase_exec_table(foo_commands);
@@ -21,7 +23,9 @@ pub mod test {
     #[test]
     fn test_can_find_list_of_command() {
         let foo_commands = "[foo]
-        commands = ['bar', 'baz']".parse::<Value>().unwrap();
+        commands = ['bar', 'baz']"
+            .parse::<Value>()
+            .unwrap();
         let foo_commands = foo_commands.as_table();
 
         let results = prase_exec_table(foo_commands);
@@ -37,18 +41,27 @@ pub mod test {
     #[test]
     fn test_inherited_commands() {
         let toml1 = "[exec.foo]
-        commands = ['bar1', 'baz1']".parse::<Value>().unwrap();
+        commands = ['bar1', 'baz1']"
+            .parse::<Value>()
+            .unwrap();
 
         let toml2 = "[exec.bar]
-        commands = ['bar2', 'baz2']".parse::<Value>().unwrap();
+        commands = ['bar2', 'baz2']"
+            .parse::<Value>()
+            .unwrap();
 
         let toml3 = "[exec.baz]
         commands = ['bar3', 'baz3', 'flig3']
         
         [exec.foo]
-        commands = 'nope'".parse::<Value>().unwrap();
+        commands = 'nope'"
+            .parse::<Value>()
+            .unwrap();
 
-        let config_container = ConfigContainer { project_config: vec![toml1, toml2, toml3], home_config: vec![] };
+        let config_container = ConfigContainer {
+            project_config: vec![toml1, toml2, toml3],
+            home_config: vec![],
+        };
 
         let exec_configs = config_container.get_exec_configs();
 

@@ -1,132 +1,109 @@
 #[macro_use]
-extern crate log;
-extern crate serde;
+extern crate clap;
 #[macro_use]
-extern crate serde_derive;
 extern crate inc;
-extern crate docopt;
+#[macro_use]
+extern crate log;
 
+use inc::core::config::ConfigContainer;
+use inc::core::command::AvaliableCommands;
 use inc::core::logging::configure_logging;
-use inc::exec::executor::{CliResult, call_main_without_stdin};
+use inc::exec::executor::{execute_external_command, CliError};
 use std::process;
-use docopt::Docopt;
+use clap::{App, AppSettings, Arg, ArgGroup};
+use inc::core::BASE_APPLICATION_NAME;
+use std::string::String;
 
-macro_rules! each_subcommand{
-    ($mac:ident) => {
-        $mac!(checkout);
-        $mac!(exec);
-        $mac!(help);
-    }
-}
+pub mod checkout;
+pub mod exec;
+pub mod list;
 
-macro_rules! declare_mod {
-    ($name:ident) => ( pub mod $name; )
-}
+fn main() {
+    let matches = App::new("inc")
+        .version(crate_version!())
+        .settings(&[
+            AppSettings::AllowExternalSubcommands,
+            AppSettings::VersionlessSubcommands,
+            AppSettings::ArgRequiredElseHelp,
+        ])
+        .global_setting(AppSettings::ColoredHelp)
+        .arg(
+            Arg::with_name("warn")
+                .long("warn")
+                .short("w")
+                .help("Only display warning messages")
+                .global(true),
+        )
+        .arg(
+            Arg::with_name("verbose")
+                .long("verbose")
+                .short("v")
+                .multiple(true)
+                .help("Increasing verbosity")
+                .global(true),
+        )
+        .arg(
+            Arg::with_name("quite")
+                .long("quite")
+                .short("q")
+                .help("Only error output will be displayed")
+                .global(true),
+        )
+        .group(ArgGroup::with_name("logging").args(&["verbose", "quite", "warn"]))
+        .subcommand(checkout::subcommand())
+        .subcommand(exec::subcommand())
+        .subcommand(list::subcommand())
+        .get_matches_safe();
 
-each_subcommand!(declare_mod);
-
-const USAGE: &'static str = "Inc[luding] your configuration, one step at a time.
-
-Usage:
-    inc [options] <command> [--] [<args>...]
-    inc <command> [--] [<args>...]
-    inc [options]
-    inc --list
-    inc --version
-    inc --help
-
-Options:
-    -h, --help                  Show this screen.
-    -v, --verbose ...           Increasing verbosity.
-    -w, --warn                  Only display warning messages.
-    -q, --quiet                 No output printed to stdout.
-    --version                   Output the version of the command
-    --list                      List all commands inc supports.
-  
-Some common inc commands are (see all commands with --list):
-    help                        Prints this output
-    exec                        Runs a command inside the project.
-    checkout                    Checks out a project from an SCM.";
-
-#[derive(Debug, Deserialize)]
-pub(crate) struct Options {
-    pub arg_command: Option<String>,
-    pub arg_args: Option<Vec<String>>,
-    pub flag_version: bool,
-    pub flag_help: bool,
-    pub flag_verbose: i32,
-    pub flag_quiet: bool,
-    pub flag_warn: bool,
-    pub flag_list: bool,
-}
-
-fn main(){
-    let docopt = Docopt::new(USAGE).unwrap()
-        .options_first(true)
-        .help(false);
-
-    // println!("{:?}", docopt);
-
-    let options: Options = match docopt.deserialize() {
-        Ok(value) => value,
-        Err(value) => {
-            println!("{}", value.to_string());
-            process::exit(1);
-        }
-    };
-    
-    configure_logging(options.flag_verbose, options.flag_warn, options.flag_quiet);
-
-    if options.flag_help {
-        info!("{}", USAGE);
-        process::exit(0);
-    }
-
-    if options.flag_list {
-        info!("I don't know how to do that.... Yet!");
-        process::exit(0);
-    }
-
-    let command = match options.arg_command {
-        Some(value) => value,
-        None => {
-            error!("No options provided. See `inc --help` for more options.");
-            process::exit(1);
-        }
+    let matches = match matches {
+        Ok(v) => v,
+        Err(err) => err.exit(),
     };
 
-    let mut args: Vec<String> = Vec::new();
-    args.push(command);
-    &options.arg_args.unwrap_or_else(|| vec![]).iter().for_each(|x| {
-        args.push(x.clone());
-    });
+    configure_logging(
+        matches.occurrences_of("verbose") as i32,
+        matches.is_present("warn"),
+        matches.is_present("quite"),
+    );
 
-    let result = try_execute_builtin_command(&args);
-    if result.is_some() {
-        let exit_code = match result.unwrap() {
-            Ok(value) => value,
-            Err(value) => {
-                error!("{}", value.message);
-                102
+    let avaliable_commands = AvaliableCommands::new();
+    let config_container = ConfigContainer::new();
+
+    let result = match matches.subcommand() {
+        ("checkout", Some(sub_m)) => checkout::execute(sub_m, avaliable_commands, config_container),
+        ("exec", Some(sub_m)) => exec::execute(sub_m, avaliable_commands, config_container),
+        ("list", Some(sub_m)) => list::execute(sub_m, avaliable_commands, config_container),
+        (external, Some(sub_m)) => match avaliable_commands
+            .find_command(format!("{}-{}", BASE_APPLICATION_NAME, external))
+        {
+            None => Err(CliError::new(
+                2,
+                format!(
+                    "{} is not reconized. Please use `--list-commands` to see avaliable commands.",
+                    external
+                ),
+            )),
+            Some(cmd) => {
+                let values: Vec<String> = match sub_m.values_of("") {
+                    Some(v) => v.map(|x| s!(x)).collect(),
+                    None => Vec::new(),
+                };
+                execute_external_command(&cmd.binary().path, &values)
             }
-        };
-        process::exit(exit_code);
+        },
+        e @ _ => {
+            trace!("Something strange happened here... {:?}", e);
+            Err(CliError::new(-1, s!("Command Unknown...")))
+        }
     };
 
-    process::exit(1);
-}
+    let return_code = match result {
+        Ok(value) => value,
+        Err(err) => {
+            error!("{}", err.message);
+            err.code
+        }
+    };
 
-fn try_execute_builtin_command(args: &Vec<String>) -> Option<CliResult> {
-    let command = args[0].clone();
-    macro_rules! cmd {
-        ($name:ident) => (if command == stringify!($name).replace("_", "-") {
-            let r = call_main_without_stdin($name::execute,
-                                                   $name::USAGE,
-                                                   &args);
-            return Some(r);
-        })
-    }
-    each_subcommand!(cmd);
-
-    None
+    process::exit(return_code);
 }

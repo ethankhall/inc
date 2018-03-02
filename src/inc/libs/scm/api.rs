@@ -1,13 +1,13 @@
-use libs::scm::{ScmUrl, CheckoutError, ScmProvier};
+use libs::scm::{CheckoutError, ScmProvier, ScmUrl};
 use libs::scm::util::compute_destination;
 use libs::scm::provider::git::GitScm;
-use libs::process::SystemBinary;
 use libs::scm::services::build_service_map;
+use core::command::AvaliableCommands;
 
 pub fn build_url_from_service(
     service: String,
     user_input: String,
-    command: &Vec<SystemBinary>,
+    command: &AvaliableCommands,
     use_ssh: bool,
 ) -> Result<ScmUrl, CheckoutError> {
     debug!("Origonal input: {}", service);
@@ -24,15 +24,14 @@ pub fn build_url_from_service(
 }
 
 pub fn build_scm_providers() -> Vec<&'static ScmProvier> {
-    return vec![&GitScm { }]
+    return vec![&GitScm {}];
 }
 
 pub fn checkout(
     repo_url: &ScmUrl,
     destination: Option<String>,
-    providers: Vec<&ScmProvier>
+    providers: Vec<&ScmProvier>,
 ) -> Result<i32, CheckoutError> {
-
     let scm_provider = providers.into_iter().find(|x| x.handles_url(repo_url));
     if scm_provider.is_none() {
         return Err(CheckoutError {
