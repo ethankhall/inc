@@ -15,7 +15,7 @@ mod checkout_integration {
     fn checkout_github_repo() {
         with_test_dir(|tmp_dir| {
             create_assert()
-                .with_args(&["checkout", "github/choosealicense.com"])
+                .with_args(&["checkout", "--https-only", "github/choosealicense.com"])
                 .current_dir(tmp_dir.clone())
                 .succeeds()
                 .unwrap();

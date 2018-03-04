@@ -42,7 +42,7 @@ impl ScmProvier for GitScm {
         let mut git_command = Command::new("git")
             .args(args)
             .spawn()
-            .expect("failed to execute process");
+            .expect("Unable to find `git` on the PATH");
 
         let exit_status = git_command.wait().expect("failed to wait on child");
 

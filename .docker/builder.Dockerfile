@@ -1,13 +1,13 @@
 FROM archlinux/base
 
-RUN pacman -Syu && pacman -S --noconfirm wget base-devel clang
+RUN pacman -Syu && pacman -S --noconfirm wget base-devel clang git openssh
 RUN mkdir /tmp/pkg && \
-    wget -q --show-progress --directory-prefix=/tmp/pkg https://dl.bintray.com/ethankhall/generic/packages/osxcross-git-0.14-1-x86_64.pkg.tar.xz && \
-    wget -q --show-progress --directory-prefix=/tmp/pkg https://dl.bintray.com/ethankhall/generic/packages/mingw-w64-winpthreads-5.0.3-1-any.pkg.tar.xz && \
-    wget -q --show-progress --directory-prefix=/tmp/pkg https://dl.bintray.com/ethankhall/generic/packages/mingw-w64-headers-5.0.3-1-any.pkg.tar.xz && \
-    wget -q --show-progress --directory-prefix=/tmp/pkg https://dl.bintray.com/ethankhall/generic/packages/mingw-w64-crt-5.0.3-1-any.pkg.tar.xz && \
-    wget -q --show-progress --directory-prefix=/tmp/pkg https://dl.bintray.com/ethankhall/generic/packages/mingw-w64-binutils-2.29-1-x86_64.pkg.tar.xz && \
-    wget -q --show-progress --directory-prefix=/tmp/pkg https://dl.bintray.com/ethankhall/generic/packages/mingw-w64-gcc-7.3.0-1-x86_64.pkg.tar.xz && \
+    wget -q --directory-prefix=/tmp/pkg https://dl.bintray.com/ethankhall/generic/packages/osxcross-git-0.14-1-x86_64.pkg.tar.xz && \
+    wget -q --directory-prefix=/tmp/pkg https://dl.bintray.com/ethankhall/generic/packages/mingw-w64-winpthreads-5.0.3-1-any.pkg.tar.xz && \
+    wget -q --directory-prefix=/tmp/pkg https://dl.bintray.com/ethankhall/generic/packages/mingw-w64-headers-5.0.3-1-any.pkg.tar.xz && \
+    wget -q --directory-prefix=/tmp/pkg https://dl.bintray.com/ethankhall/generic/packages/mingw-w64-crt-5.0.3-1-any.pkg.tar.xz && \
+    wget -q --directory-prefix=/tmp/pkg https://dl.bintray.com/ethankhall/generic/packages/mingw-w64-binutils-2.29-1-x86_64.pkg.tar.xz && \
+    wget -q --directory-prefix=/tmp/pkg https://dl.bintray.com/ethankhall/generic/packages/mingw-w64-gcc-7.3.0-1-x86_64.pkg.tar.xz && \
     pacman -U --noconfirm /tmp/pkg/*
 
 RUN curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain nightly -y
