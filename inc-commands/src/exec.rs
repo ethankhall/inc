@@ -1,5 +1,5 @@
 use inc_lib::core::config::{ConfigContainer, ExecConfig};
-use inc_lib::exec::executor::{execute_external_command, CliResult};
+use inc_lib::exec::executor::{execute_external_command, CliResult, CliError};
 use std::path::PathBuf;
 use std::fmt::Write;
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
@@ -35,10 +35,16 @@ pub fn execute(
         return Ok(0);
     }
 
-    let config = exec_configs
-        .commands
-        .get(&s!(args.value_of("command").unwrap()))
-        .unwrap();
+    let command_to_exec = args.value_of("command").unwrap();
+    debug!("Going to exec {}", command_to_exec);
+
+    let config = match exec_configs.commands.get(command_to_exec) {
+        Some(value) => value,
+        None => {
+            return Err(CliError::new(2, format!("Unable to find command list for {}! Failing!", command_to_exec)));
+        }
+    };
+
     for command_entry in config.clone().commands.into_iter() {
         if config.clone().commands.len() > 1 {
             info!("** Executing `{}`", command_entry);

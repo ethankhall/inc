@@ -86,9 +86,15 @@ fn default_ignore_failures() -> bool {
 }
 
 impl ConfigContainer {
-    pub fn new() -> Self {
-        let project_config: Vec<ProjectConfig> = collapse_the_configs::<ProjectConfig>(search_up_for_config_files());
-        let home_configs: Vec<HomeConfig> = collapse_the_configs::<HomeConfig>(search_for_home_config());
+    pub fn new() -> Result<Self, String> {
+        let project_config: Vec<ProjectConfig> = match collapse_the_configs::<ProjectConfig>(search_up_for_config_files()) {
+            Ok(value) => value,
+            Err(s) => return Err(s)
+        };
+        let home_configs: Vec<HomeConfig> = match collapse_the_configs::<HomeConfig>(search_for_home_config()) {
+            Ok(value) => value,
+            Err(s) => return Err(s)
+        };
         let home_configs = match home_configs.first() {
             Some(value) => value.clone(),
             None => HomeConfig { checkout: CheckoutConfigs { default_provider: None } }
@@ -96,10 +102,10 @@ impl ConfigContainer {
 
         trace!("Project Configs Found: {:?}", project_config);
         trace!("Home Configs Found: {:?}", home_configs);
-        return ConfigContainer {
+        return Ok(ConfigContainer {
             project_config: project_config,
             home_config: home_configs,
-        };
+        });
     }
 
     pub fn get_exec_configs(&self) -> ExecConfig {
@@ -123,7 +129,7 @@ impl ConfigContainer {
     }
 }
 
-fn collapse_the_configs<T>(config_files: Vec<PathBuf>) -> Vec<T> 
+fn collapse_the_configs<T>(config_files: Vec<PathBuf>) -> Result<Vec<T>, String>
 where
     T: DeserializeOwned,
 {
@@ -134,7 +140,7 @@ where
             Ok(config) => {
                 match serde_yaml::from_str::<T>(&config) {
                     Ok(value) => return_configs.push(value),
-                    Err(err) => error!("Error trying to parse {:?}: '{}'", val, err)
+                    Err(err) => return Err(format!("Error trying to parse {:?}: '{}'", val, err))
                 };
             }
             Err(err) => {
@@ -143,7 +149,7 @@ where
         }
     }
 
-    return return_configs;
+    return Ok(return_configs);
 }
 
 fn read_file(path: &PathBuf) -> Result<String, IoError> {

@@ -68,7 +68,13 @@ fn main() {
     );
 
     let avaliable_commands = AvaliableCommands::new();
-    let config_container = ConfigContainer::new();
+    let config_container = match ConfigContainer::new() {
+        Ok(value) => value,
+        Err(s) => {
+            error!("{}", s);
+            process::exit(2);
+        }
+    };
 
     let result = match matches.subcommand() {
         ("checkout", Some(sub_m)) => checkout::execute(sub_m, avaliable_commands, config_container),

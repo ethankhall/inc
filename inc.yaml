@@ -4,9 +4,10 @@ exec:
       - cargo build
       - cargo test
   release:
-    - cargo build --release
-    - cargo build --target=x86_64-apple-darwin --release
-    - cargo build --target=x86_64-pc-windows-gnu --release
+    commands:
+      - cargo build --release
+      - cargo build --target=x86_64-apple-darwin --release
+      - cargo build --target=x86_64-pc-windows-gnu --release
   build:
     commands: cargo build
     description: Run a normal debug build
