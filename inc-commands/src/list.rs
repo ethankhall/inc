@@ -1,14 +1,14 @@
 use clap::{App, ArgMatches, SubCommand};
-use inc::core::config::ConfigContainer;
-use inc::core::command::AvaliableCommands;
-use inc::exec::executor::CliResult;
-use inc::core::BASE_APPLICATION_NAME;
+use inc_lib::core::config::ConfigContainer;
+use inc_lib::core::command::AvaliableCommands;
+use inc_lib::exec::executor::CliResult;
+use inc_lib::core::BASE_APPLICATION_NAME;
 
-pub(crate) fn subcommand<'a, 'b>() -> App<'a, 'b> {
+pub fn subcommand<'a, 'b>() -> App<'a, 'b> {
     return SubCommand::with_name("list").about("List the known element for Inc.");
 }
 
-pub(crate) fn execute(
+pub fn execute(
     _args: &ArgMatches,
     avaliable_commands: AvaliableCommands,
     _config: ConfigContainer,

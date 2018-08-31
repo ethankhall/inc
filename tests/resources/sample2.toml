@@ -1,3 +1,0 @@
-[exec.build]
-commands = [ "echo \"Hello World\"", "echo \"Goodbye World!\"" ]
-description = "Build the project"

@@ -1,19 +1,18 @@
 #[cfg(test)]
 pub mod test {
     use core::config::*;
-    use toml::Value;
+    use serde_yaml;
 
     #[test]
     fn test_can_find_single_command() {
-        let foo_commands = "[foo]
-        commands = 'bar'"
-            .parse::<Value>()
-            .unwrap();
-        let foo_commands = foo_commands.as_table();
+        let foo_commands = 
+"exec:
+    foo:
+        commands: bar";
+        let result = serde_yaml::from_str::<ProjectConfig>(foo_commands).unwrap();
+        assert!(result.exec.contains_key("foo"), "foo didn't exist");
 
-        let results = prase_exec_table(foo_commands);
-        assert!(results.contains_key("foo"), "foo didn't exist");
-        let foo = results.get("foo").unwrap();
+        let foo = result.exec.get("foo").unwrap();
         let foo_commands = foo.clone().commands;
         assert_eq!(foo_commands.len(), 1);
         assert_eq!(foo_commands.get(0).unwrap(), &String::from("bar"));
@@ -22,15 +21,16 @@ pub mod test {
 
     #[test]
     fn test_can_find_list_of_command() {
-        let foo_commands = "[foo]
-        commands = ['bar', 'baz']"
-            .parse::<Value>()
-            .unwrap();
-        let foo_commands = foo_commands.as_table();
+        let foo_commands = 
+"exec:
+    foo:
+        commands: 
+            - bar
+            - baz";
+        let result = serde_yaml::from_str::<ProjectConfig>(foo_commands).unwrap();
+        assert!(result.exec.contains_key("foo"), "foo didn't exist");
 
-        let results = prase_exec_table(foo_commands);
-        assert!(results.contains_key("foo"), "foo didn't exist");
-        let foo = results.get("foo").unwrap();
+        let foo = result.exec.get("foo").unwrap();
         let foo_commands = foo.clone().commands;
         assert_eq!(foo_commands.len(), 2);
         assert_eq!(foo_commands.get(0).unwrap(), &String::from("bar"));
@@ -40,27 +40,37 @@ pub mod test {
 
     #[test]
     fn test_inherited_commands() {
-        let toml1 = "[exec.foo]
-        commands = ['bar1', 'baz1']"
-            .parse::<Value>()
-            .unwrap();
+        let yaml1 = 
+"exec:
+    foo:
+        commands: 
+            - bar1
+            - baz1";
+        let yaml1 = serde_yaml::from_str::<ProjectConfig>(yaml1).unwrap();
 
-        let toml2 = "[exec.bar]
-        commands = ['bar2', 'baz2']"
-            .parse::<Value>()
-            .unwrap();
+        let yaml2 = 
+"exec:
+    bar:
+        commands: 
+            - bar2
+            - baz2";
+        let yaml2 = serde_yaml::from_str::<ProjectConfig>(yaml2).unwrap();
 
-        let toml3 = "[exec.baz]
-        commands = ['bar3', 'baz3', 'flig3']
-        
-        [exec.foo]
-        commands = 'nope'"
-            .parse::<Value>()
-            .unwrap();
+        let yaml3 = 
+"exec:
+    baz:
+        commands: 
+            - bar3
+            - baz3
+            - flig3
+    foo:
+        commands:
+            - nope";
+        let yaml3 = serde_yaml::from_str::<ProjectConfig>(yaml3).unwrap();
 
         let config_container = ConfigContainer {
-            project_config: vec![toml1, toml2, toml3],
-            home_config: vec![],
+            project_config: vec![yaml1, yaml2, yaml3],
+            home_config: HomeConfig { checkout: CheckoutConfigs { default_provider: None } },
         };
 
         let exec_configs = config_container.get_exec_configs();

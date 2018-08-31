@@ -1,0 +1,9 @@
+[package]
+name = "inc-commands"
+version = "0.1.6"
+authors = ["Ethan Hall <ethan@ehdev.io>"]
+
+[dependencies]
+inc-lib = { path = "../inc-lib" }
+log = "0.3"
+clap = "2"

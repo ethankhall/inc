@@ -1,11 +1,11 @@
-use inc::core::config::{ConfigContainer, ExecConfig};
-use inc::exec::executor::{execute_external_command, CliResult};
+use inc_lib::core::config::{ConfigContainer, ExecConfig};
+use inc_lib::exec::executor::{execute_external_command, CliResult};
 use std::path::PathBuf;
 use std::fmt::Write;
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
-use inc::core::command::AvaliableCommands;
+use inc_lib::core::command::AvaliableCommands;
 
-pub(crate) fn subcommand<'a, 'b>() -> App<'a, 'b> {
+pub fn subcommand<'a, 'b>() -> App<'a, 'b> {
     return SubCommand::with_name("exec")
         .about("Execute commands from the project.")
         .setting(AppSettings::ArgRequiredElseHelp)
@@ -23,7 +23,7 @@ pub(crate) fn subcommand<'a, 'b>() -> App<'a, 'b> {
         );
 }
 
-pub(crate) fn execute(
+pub fn execute(
     args: &ArgMatches,
     _commands: AvaliableCommands,
     config: ConfigContainer,
@@ -52,12 +52,12 @@ pub(crate) fn execute(
         match result {
             Ok(value) => {
                 if value != 0 {
-                    error!("Command: `{}` returned {}", command_exec, value);
+                    error!("Command: `{}` returned {}", command_entry, value);
                     return Ok(value);
                 }
             }
             Err(_err) => {
-                error!("Error while executing {:?}!", command_exec);
+                error!("Error while executing `{:?}`!", command_entry);
                 return Ok(17);
             }
         }
@@ -69,7 +69,7 @@ fn generate_list_options(config: &ExecConfig) -> String {
     let mut list = String::new();
     write!(&mut list, "Avaliable Commands:\n").unwrap();
 
-    let command_map = config.clone().commands;
+    let command_map = config.commands.clone();
     let mut commands: Vec<&String> = command_map.keys().collect();
     commands.sort();
 

@@ -33,8 +33,8 @@ ARGS:
     #[test]
     fn list_with_build_and_run() {
         with_test_dir(|tmp_dir| {
-            let file_path = tmp_dir.clone().join("inc.toml");
-            copy_resource("sample1.toml", file_path);
+            let file_path = tmp_dir.clone().join("inc.yaml");
+            copy_resource("sample1.yaml", file_path);
 
             create_assert()
                 .with_args(&["-vvv", "exec", "--list-commands"])
@@ -62,8 +62,8 @@ ARGS:
     #[test]
     fn exec_build() {
         with_test_dir(|tmp_dir| {
-            let file_path = tmp_dir.clone().join("inc.toml");
-            copy_resource("sample1.toml", file_path);
+            let file_path = tmp_dir.clone().join("inc.yaml");
+            copy_resource("sample1.yaml", file_path);
 
             create_assert()
                 .with_args(&["-vvv", "exec", "build"])
@@ -92,8 +92,8 @@ ARGS:
     #[test]
     fn list_with_multiple_commands() {
         with_test_dir(|tmp_dir| {
-            let file_path = tmp_dir.clone().join("inc.toml");
-            copy_resource("sample2.toml", file_path);
+            let file_path = tmp_dir.clone().join("inc.yaml");
+            copy_resource("sample2.yaml", file_path);
 
             create_assert()
                 .with_args(&["-vvv", "exec", "--list-commands"])
@@ -135,8 +135,8 @@ Goodbye World!
     #[test]
     fn when_command_failes_it_will_stop() {
         with_test_dir(|tmp_dir| {
-            let file_path = tmp_dir.clone().join("inc.toml");
-            copy_resource("sample3.toml", file_path);
+            let file_path = tmp_dir.clone().join("inc.yaml");
+            copy_resource("sample3.yaml", file_path);
 
             create_assert()
                 .with_args(&["-vvv", "exec", "--list-commands"])

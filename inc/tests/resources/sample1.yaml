@@ -1,0 +1,7 @@
+exec:
+    build:
+        commands: 
+            - echo "Hello World"
+        description: "Build the project"
+    run:
+        commands: echo "Goodbye World!"

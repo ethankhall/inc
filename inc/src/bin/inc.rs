@@ -1,22 +1,23 @@
 #[macro_use]
 extern crate clap;
 #[macro_use]
-extern crate inc;
+extern crate inc_lib;
 #[macro_use]
 extern crate log;
+extern crate inc_commands;
 
-use inc::core::config::ConfigContainer;
-use inc::core::command::AvaliableCommands;
-use inc::core::logging::configure_logging;
-use inc::exec::executor::{execute_external_command, CliError};
+use inc_lib::core::config::ConfigContainer;
+use inc_lib::core::command::AvaliableCommands;
+use inc_lib::core::logging::configure_logging;
+use inc_lib::exec::executor::{execute_external_command, CliError};
 use std::process;
 use clap::{App, AppSettings, Arg, ArgGroup};
-use inc::core::BASE_APPLICATION_NAME;
+use inc_lib::core::BASE_APPLICATION_NAME;
 use std::string::String;
 
-pub mod checkout;
-pub mod exec;
-pub mod list;
+use inc_commands::checkout;
+use inc_commands::exec;
+use inc_commands::list;
 
 fn main() {
     let matches = App::new("inc")

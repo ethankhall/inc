@@ -1,14 +1,14 @@
-use inc::core::command::AvaliableCommands;
-use inc::libs::scm::api::{build_scm_providers, build_url_from_service, checkout};
-use inc::core::BASE_APPLICATION_NAME;
+use inc_lib::core::command::AvaliableCommands;
+use inc_lib::libs::scm::api::{build_scm_providers, build_url_from_service, checkout};
+use inc_lib::core::BASE_APPLICATION_NAME;
 use std::collections::HashSet;
-use inc::libs::scm::{DEFAULT_CHECKOUT_SOURCE, PRE_DEFINED_CHECKOUT_SOURCES};
-use inc::exec::executor::CliResult;
+use inc_lib::libs::scm::{DEFAULT_CHECKOUT_SOURCE, PRE_DEFINED_CHECKOUT_SOURCES};
+use inc_lib::exec::executor::CliResult;
 use std::vec::Vec;
 use clap::{App, Arg, ArgMatches, SubCommand};
-use inc::core::config::ConfigContainer;
+use inc_lib::core::config::ConfigContainer;
 
-pub(crate) fn subcommand<'a, 'b>() -> App<'a, 'b> {
+pub fn subcommand<'a, 'b>() -> App<'a, 'b> {
     return SubCommand::with_name("checkout")
         .about("Checkout from SCM")
         .arg(
@@ -44,12 +44,13 @@ pub(crate) fn subcommand<'a, 'b>() -> App<'a, 'b> {
 
 fn get_default_checkout_service(config: ConfigContainer) -> String {
     return config
-        .get_checkout_configs()
-        .default
+        .get_home_configs()
+        .checkout
+        .default_provider
         .unwrap_or_else(|| String::from(DEFAULT_CHECKOUT_SOURCE));
 }
 
-pub(crate) fn execute(
+pub fn execute(
     args: &ArgMatches,
     commands: AvaliableCommands,
     config: ConfigContainer,

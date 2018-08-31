@@ -1,0 +1,7 @@
+exec:
+    build:
+        commands: 
+            - echo "Hello World"
+            - "false"
+            - echo "Goodbye World!"
+        description: This should fail, due to the false.
