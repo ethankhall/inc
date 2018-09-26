@@ -5,3 +5,4 @@ target/
 .vscode/
 release/
 tmp
+scripts/bin

@@ -10,6 +10,11 @@ extern crate serde;
 extern crate serde_derive;
 extern crate serde_yaml;
 extern crate dirs;
+extern crate tokio_core;
+extern crate futures;
+extern crate hyper;
+extern crate hyper_tls;
+extern crate indicatif;
 
 #[macro_export]
 macro_rules! s {
