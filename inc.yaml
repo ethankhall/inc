@@ -12,3 +12,6 @@ exec:
     commands: 
       - cargo build
     description: Run a normal debug build
+  format:
+    commands:
+      - find . -name '*.rs' -not -path '*target*' -exec rustfmt {} \;

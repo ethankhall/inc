@@ -1,5 +1,5 @@
-use std::io::{stderr, stdout};
 use chrono::Local;
+use std::io::{stderr, stdout};
 
 use fern::Dispatch;
 use log::{LogLevel, LogLevelFilter};
@@ -22,13 +22,11 @@ pub fn configure_logging(verbose: i32, warn: bool, quite: bool) {
             Dispatch::new()
                 .filter(|log_meta| LogLevel::Warn <= log_meta.level())
                 .chain(stdout()),
-        )
-        .chain(
+        ).chain(
             Dispatch::new()
                 .filter(|log_meta| LogLevel::Error == log_meta.level())
                 .chain(stderr()),
-        )
-        .apply();
+        ).apply();
 
     if result.is_err() {
         panic!("Logger already initialized...");

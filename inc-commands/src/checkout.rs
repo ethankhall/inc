@@ -1,12 +1,12 @@
-use inc_lib::core::command::AvaliableCommands;
-use inc_lib::libs::scm::api::{build_scm_providers, build_url_from_service, checkout};
-use inc_lib::core::BASE_APPLICATION_NAME;
-use std::collections::HashSet;
-use inc_lib::libs::scm::{DEFAULT_CHECKOUT_SOURCE, PRE_DEFINED_CHECKOUT_SOURCES};
-use inc_lib::exec::executor::CliResult;
-use std::vec::Vec;
 use clap::{App, Arg, ArgMatches, SubCommand};
+use inc_lib::core::command::AvaliableCommands;
 use inc_lib::core::config::ConfigContainer;
+use inc_lib::core::BASE_APPLICATION_NAME;
+use inc_lib::exec::executor::CliResult;
+use inc_lib::libs::scm::api::{build_scm_providers, build_url_from_service, checkout};
+use inc_lib::libs::scm::{DEFAULT_CHECKOUT_SOURCE, PRE_DEFINED_CHECKOUT_SOURCES};
+use std::collections::HashSet;
+use std::vec::Vec;
 
 pub fn subcommand<'a, 'b>() -> App<'a, 'b> {
     return SubCommand::with_name("checkout")
@@ -17,25 +17,21 @@ pub fn subcommand<'a, 'b>() -> App<'a, 'b> {
                 .short("s")
                 .help("Where to checkout from. A lot of cases will be github.")
                 .takes_value(true),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("list-services")
                 .long("list-services")
                 .help("List all of the avaliable services."),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("https-only")
                 .long("https-only")
                 .help("Only do checkouts using http instead of ssh."),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("repository")
                 .help("The (possibly remote) repository to clone from.")
                 .takes_value(true)
                 .required(true)
                 .required_unless("list-services"),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("directory")
                 .help("Clones a repository into a newly created directory.")
                 .takes_value(true),

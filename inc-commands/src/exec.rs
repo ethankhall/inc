@@ -1,10 +1,10 @@
-use inc_lib::core::config::{ConfigContainer, ExecConfig, CommandAndEnv};
-use inc_lib::exec::executor::{execute_external_command, CliResult, CliError};
-use std::path::PathBuf;
-use std::collections::HashMap;
-use std::fmt::Write;
 use clap::{App, AppSettings, Arg, ArgMatches, SubCommand};
 use inc_lib::core::command::AvaliableCommands;
+use inc_lib::core::config::{CommandAndEnv, ConfigContainer, ExecConfig};
+use inc_lib::exec::executor::{execute_external_command, CliError, CliResult};
+use std::collections::HashMap;
+use std::fmt::Write;
+use std::path::PathBuf;
 
 pub fn subcommand<'a, 'b>() -> App<'a, 'b> {
     return SubCommand::with_name("exec")
@@ -14,8 +14,7 @@ pub fn subcommand<'a, 'b>() -> App<'a, 'b> {
             Arg::with_name("list-commands")
                 .long("list-commands")
                 .help("List all of the avaliable commands."),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("command")
                 .help("Name of the command to execute.")
                 .takes_value(true)
@@ -42,13 +41,24 @@ pub fn execute(
     let config = match exec_configs.commands.get(command_to_exec) {
         Some(value) => value,
         None => {
-            return Err(CliError::new(2, format!("Unable to find command list for {}! Failing!", command_to_exec)));
+            return Err(CliError::new(
+                2,
+                format!(
+                    "Unable to find command list for {}! Failing!",
+                    command_to_exec
+                ),
+            ));
         }
     };
 
     let command_defined_in = exec_configs.command_defintions.get(command_to_exec);
 
-    let commands: Vec<CommandAndEnv> = config.clone().commands.into_iter().map(|x| x.to_command_and_envs()).collect();
+    let commands: Vec<CommandAndEnv> = config
+        .clone()
+        .commands
+        .into_iter()
+        .map(|x| x.to_command_and_envs())
+        .collect();
     let command_count = commands.len();
 
     for command_entry in commands.into_iter() {
@@ -56,21 +66,34 @@ pub fn execute(
             info!("** Executing `{}`", command_entry.command);
         }
 
-        let mut command_list: Vec<String> =
-            command_entry.command.split(" ").map(|x| String::from(x)).collect();
+        let mut command_list: Vec<String> = command_entry
+            .command
+            .split(" ")
+            .map(|x| String::from(x))
+            .collect();
         let command_exec = command_list.remove(0);
 
         let mut extra_env: HashMap<String, String> = HashMap::new();
-        
+
         for (key, value) in command_entry.command_env {
             extra_env.insert(key, value);
         }
         if let Some(path) = command_defined_in {
-            extra_env.insert(s!("INC_PROJECT_DIR"), s!(path.parent().unwrap().to_str().unwrap()));
+            extra_env.insert(
+                s!("INC_PROJECT_DIR"),
+                s!(path.parent().unwrap().to_str().unwrap()),
+            );
         }
 
-        debug!("Executing {:?} {:?} defined in {:?}", command_exec, command_list, command_defined_in);
-        let result = execute_external_command(&PathBuf::from(command_exec.clone()), &command_list, extra_env);
+        debug!(
+            "Executing {:?} {:?} defined in {:?}",
+            command_exec, command_list, command_defined_in
+        );
+        let result = execute_external_command(
+            &PathBuf::from(command_exec.clone()),
+            &command_list,
+            extra_env,
+        );
         match result {
             Ok(value) => {
                 if value != 0 {
@@ -100,7 +123,11 @@ fn generate_list_options(config: &ExecConfig) -> String {
         write!(&mut list, " - name: {}\n", key).unwrap();
         write!(&mut list, "   description: {}\n", value.description).unwrap();
         write!(&mut list, "   commands:\n").unwrap();
-        let command_list: Vec<CommandAndEnv> = value.commands.into_iter().map(|x| x.to_command_and_envs()).collect();
+        let command_list: Vec<CommandAndEnv> = value
+            .commands
+            .into_iter()
+            .map(|x| x.to_command_and_envs())
+            .collect();
         for command in command_list {
             write!(&mut list, "     - command: {}\n", command.command).unwrap();
             write!(&mut list, "       env: {:?}\n", command.command_env).unwrap();

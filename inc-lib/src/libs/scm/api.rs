@@ -1,8 +1,8 @@
-use libs::scm::{CheckoutError, ScmProvier, ScmUrl};
-use libs::scm::util::compute_destination;
+use core::command::AvaliableCommands;
 use libs::scm::provider::git::GitScm;
 use libs::scm::services::build_service_map;
-use core::command::AvaliableCommands;
+use libs::scm::util::compute_destination;
+use libs::scm::{CheckoutError, ScmProvier, ScmUrl};
 
 pub fn build_url_from_service(
     service: String,

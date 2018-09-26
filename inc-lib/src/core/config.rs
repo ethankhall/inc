@@ -1,15 +1,15 @@
-use std::vec::Vec;
-use std::io::Error as IoError;
-use std::env::current_dir;
 use dirs::home_dir;
-use std::path::{PathBuf};
+use serde::de::DeserializeOwned;
+use serde::de::{self, value, Deserialize, Deserializer, SeqAccess, Visitor};
+use serde_yaml;
+use std::collections::HashMap;
+use std::env::current_dir;
+use std::fmt;
 use std::fs::File;
 use std::io::prelude::*;
-use std::collections::HashMap;
-use serde_yaml;
-use serde::de::DeserializeOwned;
-use std::fmt;
-use serde::de::{self, value, Deserialize, Deserializer, Visitor, SeqAccess};
+use std::io::Error as IoError;
+use std::path::PathBuf;
+use std::vec::Vec;
 
 #[derive(Debug, Clone)]
 pub struct ConfigContainer {
@@ -19,13 +19,13 @@ pub struct ConfigContainer {
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct HomeConfig {
-    pub checkout: CheckoutConfigs
+    pub checkout: CheckoutConfigs,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct CheckoutConfigs {
     #[serde(rename = "default-provider")]
-    pub default_provider: Option<String>
+    pub default_provider: Option<String>,
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
@@ -39,8 +39,11 @@ impl Commands {
     pub fn to_command_and_envs(self) -> CommandAndEnv {
         return match self {
             Commands::CommandAndEnv(commands) => commands,
-            Commands::CommandList(string) => { CommandAndEnv{command: string, command_env: HashMap::new()} }
-        }
+            Commands::CommandList(string) => CommandAndEnv {
+                command: string,
+                command_env: HashMap::new(),
+            },
+        };
     }
 }
 
@@ -62,25 +65,31 @@ pub struct ProjectConfig {
 #[derive(Debug, PartialEq, Serialize, Deserialize, Clone)]
 pub struct CommandAndEnv {
     pub command: String,
-    
+
     #[serde(default)]
     #[serde(rename = "env")]
-    pub command_env: HashMap<String, String>
+    pub command_env: HashMap<String, String>,
 }
 
 #[derive(Debug, Clone)]
 pub struct ConfigWithPath<T> {
     pub config: T,
-    pub file: Option<PathBuf>
+    pub file: Option<PathBuf>,
 }
 
-impl <T> ConfigWithPath<T> {
+impl<T> ConfigWithPath<T> {
     pub fn new(config: T, file: Option<PathBuf>) -> ConfigWithPath<T> {
-        return ConfigWithPath { config: config, file: file };
+        return ConfigWithPath {
+            config: config,
+            file: file,
+        };
     }
 
     pub fn no_file(config: T) -> ConfigWithPath<T> {
-        return ConfigWithPath { config: config, file: None };
+        return ConfigWithPath {
+            config: config,
+            file: None,
+        };
     }
 }
 
@@ -88,7 +97,7 @@ impl <T> ConfigWithPath<T> {
 #[derive(Debug)]
 pub struct ExecConfig {
     pub commands: HashMap<String, ExecCommandConfig>,
-    pub command_defintions: HashMap<String, PathBuf>
+    pub command_defintions: HashMap<String, PathBuf>,
 }
 
 fn default_description() -> String {
@@ -101,17 +110,23 @@ fn default_ignore_failures() -> bool {
 
 impl ConfigContainer {
     pub fn new() -> Result<Self, String> {
-        let project_config: Vec<ConfigWithPath<ProjectConfig>> = match collapse_the_configs::<ProjectConfig>(search_up_for_config_files()) {
-            Ok(value) => value,
-            Err(s) => return Err(s)
-        };
-        let home_configs: Vec<ConfigWithPath<HomeConfig>> = match collapse_the_configs::<HomeConfig>(search_for_home_config()) {
-            Ok(value) => value,
-            Err(s) => return Err(s)
-        };
+        let project_config: Vec<ConfigWithPath<ProjectConfig>> =
+            match collapse_the_configs::<ProjectConfig>(search_up_for_config_files()) {
+                Ok(value) => value,
+                Err(s) => return Err(s),
+            };
+        let home_configs: Vec<ConfigWithPath<HomeConfig>> =
+            match collapse_the_configs::<HomeConfig>(search_for_home_config()) {
+                Ok(value) => value,
+                Err(s) => return Err(s),
+            };
         let home_configs = match home_configs.first() {
             Some(value) => value.clone(),
-            None => ConfigWithPath::no_file(HomeConfig { checkout: CheckoutConfigs { default_provider: None } } )
+            None => ConfigWithPath::no_file(HomeConfig {
+                checkout: CheckoutConfigs {
+                    default_provider: None,
+                },
+            }),
         };
 
         trace!("Project Configs Found: {:?}", project_config);
@@ -127,7 +142,6 @@ impl ConfigContainer {
         let mut command_defintion_map: HashMap<String, PathBuf> = HashMap::new();
 
         for project_config in self.project_config.clone().into_iter() {
-            
             for (key, value) in project_config.config.exec.into_iter() {
                 if !command_map.contains_key(&key) {
                     command_map.insert(key.clone(), value);
@@ -141,7 +155,7 @@ impl ConfigContainer {
 
         return ExecConfig {
             commands: command_map,
-            command_defintions: command_defintion_map
+            command_defintions: command_defintion_map,
         };
     }
 
@@ -161,7 +175,7 @@ where
             Ok(config) => {
                 match serde_yaml::from_str::<T>(&config) {
                     Ok(value) => return_configs.push(ConfigWithPath::new(value, Some(val))),
-                    Err(err) => return Err(format!("Error trying to parse {:?}: '{}'", val, err))
+                    Err(err) => return Err(format!("Error trying to parse {:?}: '{}'", val, err)),
                 };
             }
             Err(err) => {
@@ -178,7 +192,7 @@ fn read_file(path: &PathBuf) -> Result<String, IoError> {
     let mut contents = String::new();
     return match file.read_to_string(&mut contents) {
         Ok(_) => Ok(contents),
-        Err(err) => Err(err)
+        Err(err) => Err(err),
     };
 }
 

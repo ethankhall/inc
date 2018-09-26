@@ -11,7 +11,8 @@ mod root_integration {
             .fails()
             .and()
             .stderr()
-            .contains("USAGE:
+            .contains(
+                "USAGE:
     inc [FLAGS] [SUBCOMMAND]
 
 FLAGS:
@@ -25,8 +26,8 @@ SUBCOMMANDS:
     checkout    Checkout from SCM
     exec        Execute commands from the project.
     help        Prints this message or the help of the given subcommand(s)
-    list        List the known element for Inc.")
-            .unwrap();
+    list        List the known element for Inc.",
+            ).unwrap();
     }
 
     #[test]
@@ -36,11 +37,12 @@ SUBCOMMANDS:
             .succeeds()
             .and()
             .stdout()
-            .contains("avaliable-commands:
+            .contains(
+                "avaliable-commands:
   - checkout
   - exec
-  - list")
-            .unwrap();
+  - list",
+            ).unwrap();
     }
 
     #[test]
@@ -50,10 +52,11 @@ SUBCOMMANDS:
             .succeeds()
             .and()
             .stdout()
-            .contains("[INFO] avaliable-commands:
+            .contains(
+                "[INFO] avaliable-commands:
   - checkout
   - exec
-  - list")
-            .unwrap();
+  - list",
+            ).unwrap();
     }
 }

@@ -59,9 +59,9 @@ pub mod test_data {
 
 #[cfg(test)]
 pub mod test {
+    use super::test_data::*;
     use libs::scm::provider::git::*;
     use libs::scm::{ScmProvier, ScmUrl};
-    use super::test_data::*;
 
     macro_rules! is_git_url {
         ($($name:ident: $arguments:expr,)*) => {

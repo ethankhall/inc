@@ -5,11 +5,11 @@ mod shared;
 
 #[cfg(test)]
 mod checkout_integration {
-    use std::env::var;
-    use std::io::prelude::*;
-    use std::fs;
-    use std::os::unix::fs::OpenOptionsExt;
     use shared::utils::*;
+    use std::env::var;
+    use std::fs;
+    use std::io::prelude::*;
+    use std::os::unix::fs::OpenOptionsExt;
 
     #[test]
     fn checkout_github_repo() {
@@ -35,14 +35,15 @@ mod checkout_integration {
             .fails()
             .and()
             .stderr()
-            .contains("error: The following required arguments were not provided:
+            .contains(
+                "error: The following required arguments were not provided:
     <repository>
 
 USAGE:
     inc checkout [FLAGS] [OPTIONS] <repository> [directory]
 
-For more information try --help")
-            .unwrap();
+For more information try --help",
+            ).unwrap();
     }
 
     #[test]
@@ -51,7 +52,9 @@ For more information try --help")
             .with_args(&["checkout", "--help"])
             .succeeds()
             .and()
-            .stdout().contains("Checkout from SCM
+            .stdout()
+            .contains(
+                "Checkout from SCM
 
 USAGE:
     inc checkout [FLAGS] [OPTIONS] <repository> [directory]
@@ -69,8 +72,8 @@ OPTIONS:
 
 ARGS:
     <repository>    The (possibly remote) repository to clone from.
-    <directory>     Clones a repository into a newly created directory.")
-            .unwrap();
+    <directory>     Clones a repository into a newly created directory.",
+            ).unwrap();
     }
 
     #[test]
@@ -128,8 +131,7 @@ ARGS:
                     "--service=foobar",
                     "something-random",
                     checkout_dir.to_str().unwrap(),
-                ])
-                .with_env(&[("PATH", new_path)])
+                ]).with_env(&[("PATH", new_path)])
                 .succeeds()
                 .unwrap();
 

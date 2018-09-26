@@ -6,14 +6,14 @@ extern crate inc_lib;
 extern crate log;
 extern crate inc_commands;
 
-use inc_lib::core::config::ConfigContainer;
-use inc_lib::core::command::AvaliableCommands;
-use inc_lib::core::logging::configure_logging;
-use inc_lib::exec::executor::{execute_external_command, CliError};
-use std::process;
 use clap::{App, AppSettings, Arg, ArgGroup};
+use inc_lib::core::command::AvaliableCommands;
+use inc_lib::core::config::ConfigContainer;
+use inc_lib::core::logging::configure_logging;
 use inc_lib::core::BASE_APPLICATION_NAME;
+use inc_lib::exec::executor::{execute_external_command, CliError};
 use std::collections::HashMap;
+use std::process;
 use std::string::String;
 
 use inc_commands::checkout;
@@ -27,31 +27,27 @@ fn main() {
             AppSettings::AllowExternalSubcommands,
             AppSettings::VersionlessSubcommands,
             AppSettings::ArgRequiredElseHelp,
-        ])
-        .global_setting(AppSettings::ColoredHelp)
+        ]).global_setting(AppSettings::ColoredHelp)
         .arg(
             Arg::with_name("warn")
                 .long("warn")
                 .short("w")
                 .help("Only display warning messages")
                 .global(true),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("verbose")
                 .long("verbose")
                 .short("v")
                 .multiple(true)
                 .help("Increasing verbosity")
                 .global(true),
-        )
-        .arg(
+        ).arg(
             Arg::with_name("quite")
                 .long("quite")
                 .short("q")
                 .help("Only error output will be displayed")
                 .global(true),
-        )
-        .group(ArgGroup::with_name("logging").args(&["verbose", "quite", "warn"]))
+        ).group(ArgGroup::with_name("logging").args(&["verbose", "quite", "warn"]))
         .subcommand(checkout::subcommand())
         .subcommand(exec::subcommand())
         .subcommand(list::subcommand())

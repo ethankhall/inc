@@ -1,8 +1,8 @@
+use core::BASE_APPLICATION_NAME;
 use libs::process::SystemBinary;
 use std::collections::HashSet;
 use std::env::{self, current_exe};
 use std::fs::{self, DirEntry, ReadDir};
-use core::BASE_APPLICATION_NAME;
 
 #[derive(Debug, Clone)]
 pub struct AvaliableCommands {
@@ -59,7 +59,8 @@ impl AvaliableCommands {
 
     pub fn find_commands_with_parent<S: Into<String>>(&self, parent: S) -> Vec<CommandEntry> {
         let parent: String = parent.into();
-        return self.commands
+        return self
+            .commands
             .clone()
             .into_iter()
             .filter(|x| x.parent_command == parent)
@@ -68,7 +69,8 @@ impl AvaliableCommands {
 
     pub fn find_command<S: Into<String>>(&self, name: S) -> Option<CommandEntry> {
         let name: String = name.into();
-        return self.commands
+        return self
+            .commands
             .clone()
             .into_iter()
             .find(|x| format!("{}-{}", x.parent_command, x.name) == name);

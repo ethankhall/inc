@@ -1,8 +1,8 @@
-use std::collections::LinkedList;
-use std::process::Command;
-use std::path::Path;
 use libs::scm::{CheckoutError, ScmProvier, ScmUrl};
 use regex::RegexSet;
+use std::collections::LinkedList;
+use std::path::Path;
+use std::process::Command;
 use url::Url;
 
 #[derive(Debug, Clone)]

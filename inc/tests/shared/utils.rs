@@ -1,7 +1,7 @@
-use std::path::PathBuf;
-use tempdir::TempDir;
 use assert_cli;
 use std::fs;
+use std::path::PathBuf;
+use tempdir::TempDir;
 
 pub fn with_test_dir<F: Fn(PathBuf) -> ()>(exec: F) {
     let tmp_dir = TempDir::new("checkout-dir-tmp").expect("temp dir should be created");

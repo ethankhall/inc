@@ -1,8 +1,8 @@
 use clap::{App, ArgMatches, SubCommand};
-use inc_lib::core::config::ConfigContainer;
 use inc_lib::core::command::AvaliableCommands;
-use inc_lib::exec::executor::CliResult;
+use inc_lib::core::config::ConfigContainer;
 use inc_lib::core::BASE_APPLICATION_NAME;
+use inc_lib::exec::executor::CliResult;
 
 pub fn subcommand<'a, 'b>() -> App<'a, 'b> {
     return SubCommand::with_name("list").about("List the known element for Inc.");

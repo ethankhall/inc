@@ -14,7 +14,8 @@ mod exec_integration {
             .fails()
             .and()
             .stderr()
-            .contains("
+            .contains(
+                "
 USAGE:
     inc exec [FLAGS] <command>
 
@@ -26,8 +27,8 @@ FLAGS:
     -w, --warn             Only display warning messages
 
 ARGS:
-    <command>    Name of the command to execute.")
-            .unwrap();
+    <command>    Name of the command to execute.",
+            ).unwrap();
     }
 
     #[test]
@@ -56,8 +57,7 @@ ARGS:
    commands:
      - command: echo \"Goodbye World!\"
        env: {}",
-                )
-                .unwrap();
+                ).unwrap();
         });
     }
 
@@ -115,8 +115,7 @@ ARGS:
      - command: echo \"Goodbye World!\"
        env: {}
 ",
-                )
-                .unwrap();
+                ).unwrap();
 
             create_assert()
                 .with_args(&["exec", "build"])
@@ -132,8 +131,7 @@ Hello World
 ** Executing `echo \"Goodbye World!\"`
 Goodbye World!
 ",
-                )
-                .unwrap();
+                ).unwrap();
         });
     }
 
@@ -162,8 +160,7 @@ Goodbye World!
        env: {}
      - command: echo \"Goodbye World!\"
        env: {}",
-                )
-                .unwrap();
+                ).unwrap();
 
             create_assert()
                 .with_args(&["exec", "build"])

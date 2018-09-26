@@ -1,9 +1,9 @@
-use libs::scm::{CheckoutError, ScmService, ScmUrl};
-use libs::process::SystemBinary;
-use exec::executor::execute_external_command_for_output;
-use std::collections::HashMap;
-use core::BASE_APPLICATION_NAME;
 use core::command::AvaliableCommands;
+use core::BASE_APPLICATION_NAME;
+use exec::executor::execute_external_command_for_output;
+use libs::process::SystemBinary;
+use libs::scm::{CheckoutError, ScmService, ScmUrl};
+use std::collections::HashMap;
 
 pub fn build_service_map(sub_commands: &AvaliableCommands) -> HashMap<String, Box<ScmService>> {
     let mut result: HashMap<String, Box<ScmService>> = HashMap::new();
@@ -76,7 +76,7 @@ impl ScmService for ExternalScmService {
         let result = execute_external_command_for_output(
             &(self.binary.clone().path),
             &(vec![user_input]),
-            env
+            env,
         );
 
         return match result {

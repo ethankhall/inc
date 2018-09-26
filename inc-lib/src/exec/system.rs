@@ -1,8 +1,8 @@
 use exec::Execution;
-use std::path::PathBuf;
-use std::env::{current_exe, var};
-use std::process::Command;
 use std::collections::HashMap;
+use std::env::{current_exe, var};
+use std::path::PathBuf;
+use std::process::Command;
 
 #[derive(Debug, Clone)]
 pub struct SystemExecution {

@@ -1,6 +1,6 @@
-use std::path::{Path, PathBuf};
-use std::env::current_dir;
 use names::Generator;
+use std::env::current_dir;
+use std::path::{Path, PathBuf};
 
 pub(crate) fn compute_destination(
     destination: Option<String>,

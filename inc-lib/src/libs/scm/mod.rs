@@ -1,6 +1,6 @@
-pub mod services;
-pub mod provider;
 pub mod api;
+pub mod provider;
+pub mod services;
 pub(crate) mod util;
 
 use std::path::Path;
