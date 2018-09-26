@@ -4,22 +4,6 @@ pub mod test {
     use serde_yaml;
 
     #[test]
-    fn test_can_find_single_command() {
-        let foo_commands = 
-"exec:
-    foo:
-        commands: bar";
-        let result = serde_yaml::from_str::<ProjectConfig>(foo_commands).unwrap();
-        assert!(result.exec.contains_key("foo"), "foo didn't exist");
-
-        let foo = result.exec.get("foo").unwrap();
-        let foo_commands = foo.clone().commands;
-        assert_eq!(foo_commands.len(), 1);
-        assert_eq!(foo_commands.get(0).unwrap(), &String::from("bar"));
-        assert_eq!(foo.clone().ignore_failures, false);
-    }
-
-    #[test]
     fn test_can_find_list_of_command() {
         let foo_commands = 
 "exec:
@@ -33,8 +17,8 @@ pub mod test {
         let foo = result.exec.get("foo").unwrap();
         let foo_commands = foo.clone().commands;
         assert_eq!(foo_commands.len(), 2);
-        assert_eq!(foo_commands.get(0).unwrap(), &String::from("bar"));
-        assert_eq!(foo_commands.get(1).unwrap(), &String::from("baz"));
+        assert_eq!(foo_commands.get(0).unwrap(), &Commands::CommandList(String::from("bar")));
+        assert_eq!(foo_commands.get(1).unwrap(), &Commands::CommandList(String::from("baz")));
         assert_eq!(foo.clone().ignore_failures, false);
     }
 
@@ -69,8 +53,8 @@ pub mod test {
         let yaml3 = serde_yaml::from_str::<ProjectConfig>(yaml3).unwrap();
 
         let config_container = ConfigContainer {
-            project_config: vec![yaml1, yaml2, yaml3],
-            home_config: HomeConfig { checkout: CheckoutConfigs { default_provider: None } },
+            project_config: vec![ConfigWithPath::no_file(yaml1),ConfigWithPath::no_file( yaml2), ConfigWithPath::no_file(yaml3)],
+            home_config: ConfigWithPath::no_file(HomeConfig { checkout: CheckoutConfigs { default_provider: None } }),
         };
 
         let exec_configs = config_container.get_exec_configs();
@@ -82,18 +66,18 @@ pub mod test {
 
         let foo_command = exec_configs.commands.get("foo").unwrap().clone().commands;
         assert_eq!(foo_command.len(), 2);
-        assert_eq!(foo_command.get(0), Some(&String::from("bar1")));
-        assert_eq!(foo_command.get(1), Some(&String::from("baz1")));
+        assert_eq!(foo_command.get(0), Some(&Commands::CommandList(String::from("bar1"))));
+        assert_eq!(foo_command.get(1), Some(&Commands::CommandList(String::from("baz1"))));
 
         let bar_command = exec_configs.commands.get("bar").unwrap().clone().commands;
         assert_eq!(bar_command.len(), 2);
-        assert_eq!(bar_command.get(0), Some(&String::from("bar2")));
-        assert_eq!(bar_command.get(1), Some(&String::from("baz2")));
+        assert_eq!(bar_command.get(0), Some(&Commands::CommandList(String::from("bar2"))));
+        assert_eq!(bar_command.get(1), Some(&Commands::CommandList(String::from("baz2"))));
 
         let baz_command = exec_configs.commands.get("baz").unwrap().clone().commands;
         assert_eq!(baz_command.len(), 3);
-        assert_eq!(baz_command.get(0), Some(&String::from("bar3")));
-        assert_eq!(baz_command.get(1), Some(&String::from("baz3")));
-        assert_eq!(baz_command.get(2), Some(&String::from("flig3")));
+        assert_eq!(baz_command.get(0), Some(&Commands::CommandList(String::from("bar3"))));
+        assert_eq!(baz_command.get(1), Some(&Commands::CommandList(String::from("baz3"))));
+        assert_eq!(baz_command.get(2), Some(&Commands::CommandList(String::from("flig3"))));
     }
 }

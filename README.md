@@ -31,11 +31,13 @@ A simple example of this is CI jobs using different providers. If you have a pro
 
 Another common use-case is describing the acceptance tests using `inc exec`. This allows open source teams to describe whats needs locally before a merge will happen. This ensures that everyone handles a PR the same way and gives the contributor an idea of what's expected to work.
 
-Like the rest of inc, we describe the commands in `inc.toml` files. An example deceleration of the 'build' command like:
+Like the rest of inc, we describe the commands in `inc.yaml` files. An example deceleration of the 'build' command like:
 ```
-[exec.build]
-commands = "cargo build"
-description = "Run a normal debug build"
+exec:
+    build:
+        description = Run a normal debug build
+        commands:
+            - cargo build
 ```
 
 Here we give `inc` the command to run as a string, it could also be a list when multiple commands should be executed. We can also specify a description for when `inc exec --list` is run, to you can tell people why you would want to execute this command.

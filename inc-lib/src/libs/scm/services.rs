@@ -71,12 +71,12 @@ impl ScmService for ExternalScmService {
         let use_ssh_env = if use_ssh { "TRUE" } else { "FALSE" };
 
         let mut env = HashMap::new();
-        env.insert("INC_CHECKOUT_SSH", use_ssh_env);
+        env.insert(s!("INC_CHECKOUT_SSH"), s!(use_ssh_env));
 
         let result = execute_external_command_for_output(
             &(self.binary.clone().path),
             &(vec![user_input]),
-            &env,
+            env
         );
 
         return match result {

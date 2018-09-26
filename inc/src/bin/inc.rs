@@ -13,6 +13,7 @@ use inc_lib::exec::executor::{execute_external_command, CliError};
 use std::process;
 use clap::{App, AppSettings, Arg, ArgGroup};
 use inc_lib::core::BASE_APPLICATION_NAME;
+use std::collections::HashMap;
 use std::string::String;
 
 use inc_commands::checkout;
@@ -95,7 +96,7 @@ fn main() {
                     Some(v) => v.map(|x| s!(x)).collect(),
                     None => Vec::new(),
                 };
-                execute_external_command(&cmd.binary().path, &values)
+                execute_external_command(&cmd.binary().path, &values, HashMap::new())
             }
         },
         e @ _ => {

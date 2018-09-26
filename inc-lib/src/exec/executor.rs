@@ -1,7 +1,8 @@
 use std::env::{self, current_exe, var};
-use std::process::Command;
+use std::process::{Command, Stdio, Child};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::io::Error as IoError;
 
 pub struct CliError {
     pub code: i32,
@@ -32,67 +33,39 @@ impl From<CliParseError> for CliError {
     }
 }
 
-pub fn execute_external_command(cmd: &PathBuf, args: &[String]) -> CliResult {
+pub fn execute_external_command(cmd: &PathBuf, args: &[String], extra_env: HashMap<String, String>) -> CliResult {
     let command_exe = format!("{:?}{}", cmd.to_str().unwrap(), env::consts::EXE_SUFFIX);
-    let mut command = build_command(command_exe, args);
 
-    let swawn = command.envs(build_env_updates()).spawn();
-
-    if let Err(value) = swawn {
-        return Err(CliError {
-            code: 10,
-            message: format!("Unable to execute command: {}", value),
-        });
-    }
-
-    let output = swawn.unwrap().wait();
-
-    return match output {
-        Ok(code) => Ok(code.code().unwrap_or_else(|| 0)),
-        Err(value) => Err(CliError {
-            code: 10,
-            message: format!("Unable to run {:?} it returned {}", args, value),
-        }),
+    return match run_command(command_exe, args, extra_env, false) {
+        (_, _, Ok(code)) => Ok(code),
+        (_, _, Err(err)) => Err(err)
     };
 }
 
 pub fn execute_external_command_for_output(
     cmd: &PathBuf,
     args: &[String],
-    env: &HashMap<&str, &str>,
+    extra_env: HashMap<String, String>,
 ) -> Result<String, CliError> {
     let command_exe = format!("{}{}", cmd.to_str().unwrap(), env::consts::EXE_SUFFIX);
-    let mut command = build_command(command_exe, args);
-    command.envs(env.into_iter());
 
-    let output = command.output();
-
-    if let Err(value) = output {
-        return Err(CliError {
-            code: 12,
-            message: format!("Unable to execute command: {}", value),
-        });
-    }
-
-    let output = output.unwrap();
-
-    if !output.status.success() {
-        for line in String::from_utf8_lossy(&output.stdout).to_string().lines() {
+    return match run_command(command_exe, args, extra_env, true) {
+        (stdout, _, Ok(_)) => {
+            Ok(stdout.trim().to_string())
+        } ,
+        (stdout, stderr, Err(err)) => {
+            for line in stdout.lines() {
             error!("OUT: {}", line);
+            }
+            for line in stderr.lines() {
+                error!("ERR: {}", line);
+            }
+            Err(err)
         }
-        for line in String::from_utf8_lossy(&output.stderr).to_string().lines() {
-            error!("ERR: {}", line);
-        }
-        return Err(CliError {
-            code: 12,
-            message: format!("Unable to run {:?} it returned {}", args, output.status),
-        });
-    }
-
-    return Ok(String::from_utf8_lossy(&output.stdout).trim().to_string());
+    };
 }
 
-fn build_command(cmd: String, args: &[String]) -> Box<Command> {
+fn run_command<'a>(cmd: String, args: &[String], extra_env: HashMap<String, String>, capture_output: bool) -> (String, String, Result<i32, CliError>) {
     let mut command_string = String::new();
     command_string.push_str(cmd.as_str());
     for arg in args.iter() {
@@ -100,27 +73,65 @@ fn build_command(cmd: String, args: &[String]) -> Box<Command> {
         command_string.push_str(arg.as_str());
     }
 
-    let mut command = build_cmd_for_platform();
-    command.arg(command_string).envs(build_env_updates());
-
-    return Box::from(command);
-}
-
-fn build_cmd_for_platform() -> Command {
-    if cfg!(target_os = "windows") {
-        let mut cmd = Command::new("cmd");
-        cmd.arg("/C");
-        return cmd;
+    let (stdout, stderr) = if capture_output {
+        (Stdio::piped(), Stdio::piped())
     } else {
-        let mut cmd = Command::new("sh");
-        cmd.arg("-c");
-        return cmd;
-    }
+        (Stdio::inherit(), Stdio::inherit())
+    };
+
+    let env_map = build_env_updates(extra_env);
+    let child = match build_cmd(command_string, env_map, stdout, stderr) {
+        Err(value) => return (s!(""), s!(""), Err(CliError { code: 10, message: format!("Unable to execute command: {}", value) })),
+        Ok(child) => child
+    };
+
+    let result = child.wait_with_output();
+
+    return match result {
+        Ok(output) =>  {
+            (String::from_utf8_lossy(&output.stdout).to_string(), 
+            String::from_utf8_lossy(&output.stderr).to_string(), 
+            Ok(output.status.code().unwrap_or_else(|| 0)))
+        }
+        Err(value) => (s!(""), s!(""), Err(CliError {code: 10,message: format!("Unable to run {:?} it returned {}", args, value)})),
+    };
 }
 
-fn build_env_updates() -> HashMap<String, String> {
+#[cfg(windows)]
+fn build_cmd<'a>(command: String, env: HashMap<String, String>, stdout: Stdio, stderr: Stdio) -> Result<Child, IoError> {
+    return Command::new("cmd")
+        .arg("/C")
+        .stdout(stdout)
+        .stderr(stderr)
+        .arg(command)
+        .envs(&env)
+        .spawn();
+}
+
+#[cfg(unix)]
+fn build_cmd(command: String, env: HashMap<String, String>, stdout: Stdio, stderr: Stdio) -> Result<Child, IoError> {
+    return Command::new("sh")
+        .arg("-c")
+        .stdout(stdout)
+        .stderr(stderr)
+        .arg(command)
+        .envs(&env)
+        .spawn();
+}
+
+fn build_env_updates(extra_env: HashMap<String, String>) -> HashMap<String, String> {
     let mut results: HashMap<String, String> = HashMap::new();
     results.insert(String::from("PATH"), build_path());
+
+    for (key, value) in env::vars() {
+        results.insert(key, value);
+    }
+
+    for (key, value) in extra_env {
+        results.insert(key, value);
+    }
+
+    debug!("Using ENV: {:?}", results);
 
     return results;
 }

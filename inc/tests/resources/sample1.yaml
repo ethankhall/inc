@@ -4,4 +4,5 @@ exec:
             - echo "Hello World"
         description: "Build the project"
     run:
-        commands: echo "Goodbye World!"
+        commands: 
+            - echo "Goodbye World!"

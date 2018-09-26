@@ -49,11 +49,13 @@ ARGS:
  - name: build
    description: Build the project
    commands:
-     - echo \"Hello World\"
+     - command: echo \"Hello World\"
+       env: {}
  - name: run
    description: No Description Provided
    commands:
-     - echo \"Goodbye World!\"",
+     - command: echo \"Goodbye World!\"
+       env: {}",
                 )
                 .unwrap();
         });
@@ -108,8 +110,11 @@ ARGS:
  - name: build
    description: Build the project
    commands:
-     - echo \"Hello World\"
-     - echo \"Goodbye World!\"",
+     - command: echo \"Hello World\"
+       env: {}
+     - command: echo \"Goodbye World!\"
+       env: {}
+",
                 )
                 .unwrap();
 
@@ -151,9 +156,12 @@ Goodbye World!
  - name: build
    description: This should fail, due to the false.
    commands:
-     - echo \"Hello World\"
-     - false
-     - echo \"Goodbye World!\"",
+     - command: echo \"Hello World\"
+       env: {}
+     - command: false
+       env: {}
+     - command: echo \"Goodbye World!\"
+       env: {}",
                 )
                 .unwrap();
 
