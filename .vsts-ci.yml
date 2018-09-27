@@ -1,0 +1,69 @@
+phases:
+  - phase: Windows_Build
+    dependsOn: Linux_Build
+    queue: Hosted VS2017
+    steps:
+      - powershell: |
+          invoke-restmethod -usebasicparsing 'https://static.rust-lang.org/rustup/dist/i686-pc-windows-gnu/rustup-init.exe' -outfile 'rustup-init.exe'
+          ./rustup-init.exe -y --default-toolchain nightly-x86_64-pc-windows-msvc --no-modify-path
+          & "$env:USERPROFILE/.cargo/bin/rustup.exe" install nightly-x86_64-pc-windows-msvc
+          remove-item rustup-init.exe
+        displayName: Install Rust
+      - powershell: |
+          & "$env:USERPROFILE/.cargo/bin/cargo.exe" +nightly-x86_64-pc-windows-msvc test
+        displayName: Run Tests
+      - powershell: |
+          & "$env:USERPROFILE/.cargo/bin/cargo.exe" +nightly-x86_64-pc-windows-msvc build --release
+        displayName: Build Release
+      - task: PublishBuildArtifacts@1
+        displayName: "Publish Artifact: Release Build"
+        inputs:
+          PathtoPublish: ./target/release/inc.exe
+          ArtifactName: inc-windows
+          ArtifactType: Container
+
+  - phase: Linux_Build
+    queue: Hosted Linux Preview
+    steps:
+      - task: Docker@0
+        inputs:
+          detached: false
+          containerregistrytype: 'Container Registry'
+          dockerFile: '.docker/musl-linux.Dockerfile'
+          imageName: 'inc-musl'
+
+      - task: Docker@0
+        displayName: Build Application
+        inputs:
+          detached: false
+          containerregistrytype: 'Container Registry'
+          action: 'Run an image'
+          imageName: 'inc-musl'
+          volumes: $(Build.SourcesDirectory):/build
+          workDir: '/build'
+          containerCommand: '/bin/musl-build.sh'
+
+      - task: PublishBuildArtifacts@1
+        displayName: "Publish Artifact: Release Build"
+        inputs:
+          PathtoPublish: ./target/x86_64-unknown-linux-musl/release/inc
+          ArtifactType: Container
+          ArtifactName: inc-linux
+
+  - phase: Mac_Build
+    queue: Hosted macOS Preview
+    dependsOn: Linux_Build
+    steps:
+      - script: |
+          curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain nightly -y
+          
+          
+      - script: |
+          $HOME/.cargo/bin/cargo build --release
+
+      - task: PublishBuildArtifacts@1
+        displayName: "Publish Artifact: Release Build"
+        inputs:
+          PathtoPublish: ./target/release/inc
+          ArtifactName: inc-mac
+          ArtifactType: Container
