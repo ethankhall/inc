@@ -1,0 +1,4 @@
+[github]
+owner = "ethankhall"
+repo = "inc"
+version-file = "inc/Cargo.toml"

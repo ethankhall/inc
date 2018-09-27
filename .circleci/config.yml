@@ -5,6 +5,11 @@ jobs:
       - image: ethankhall/rust-cross-build:latest
     steps:
       - run:
+          name: Pull artifacts
+          command: |
+            curl --location https://github.com/ethankhall/release-manager/releases/download/v0.1.10/release-manager-linux -o ~/release-manager
+            chmod +x ~/release-manager
+      - run:
           name: Update Rust
           command: rustup update
       - run:
@@ -28,5 +33,7 @@ jobs:
           command: ~/inc exec release
       - run:
           name: Tag Version
-          command: ./scripts/tag-version.sh
+          command: |
+            ~/release-manager github release-and-bump
+            ~/release-manager github artifacts inc-windows.exe=target/x86_64-pc-windows-gnu/release/inc.exe inc-mac=target/x86_64-apple-darwin/release/inc inc-linux=target/release/inc
 
