@@ -1,10 +1,8 @@
 use dirs::home_dir;
 use serde::de::DeserializeOwned;
-use serde::de::{self, value, Deserialize, Deserializer, SeqAccess, Visitor};
 use serde_yaml;
 use std::collections::HashMap;
 use std::env::current_dir;
-use std::fmt;
 use std::fs::File;
 use std::io::prelude::*;
 use std::io::Error as IoError;

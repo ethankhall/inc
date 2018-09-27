@@ -9,7 +9,10 @@ extern crate url;
 #[macro_use]
 extern crate serde_derive;
 extern crate dirs;
+#[cfg(unix)]
+extern crate libc;
 extern crate serde_yaml;
+extern crate signal_hook;
 
 #[macro_export]
 macro_rules! s {

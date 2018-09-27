@@ -15,6 +15,8 @@ serde = "1.0"
 serde_derive = "1.0"
 serde_yaml = "0.8"
 dirs = "1.0.3"
+signal-hook = "0.1.5"
+libc = "0.2"
 
 [dev-dependencies]
 assert_cli = "0.5"

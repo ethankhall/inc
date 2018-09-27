@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::env::{self, current_exe, var};
 use std::io::Error as IoError;
 use std::path::PathBuf;
-use std::process::{Child, Command, Stdio};
+use std::process::{Child, Command, Output, Stdio};
 
 pub struct CliError {
     pub code: i32,
@@ -67,7 +67,7 @@ pub fn execute_external_command_for_output(
     };
 }
 
-fn run_command<'a>(
+fn run_command(
     cmd: String,
     args: &[String],
     extra_env: HashMap<String, String>,
@@ -87,7 +87,7 @@ fn run_command<'a>(
     };
 
     let env_map = build_env_updates(extra_env);
-    let child = match build_cmd(command_string, env_map, stdout, stderr) {
+    let child = match spawn_cmd(command_string, env_map, stdout, stderr) {
         Err(value) => {
             return (
                 s!(""),
@@ -101,7 +101,7 @@ fn run_command<'a>(
         Ok(child) => child,
     };
 
-    let result = child.wait_with_output();
+    let result = wait_for_output(child);
 
     return match result {
         Ok(output) => (
@@ -121,7 +121,51 @@ fn run_command<'a>(
 }
 
 #[cfg(windows)]
-fn build_cmd<'a>(
+fn wait_for_output(child: Child) -> Result<Output, std::io::Error> {
+    return child.wait_with_output();
+}
+
+#[cfg(unix)]
+fn wait_for_output(child: Child) -> Result<Output, std::io::Error> {
+    use libc::{kill, SIGKILL, SIGTERM};
+    use std::thread::sleep;
+    use std::time::Duration;
+    let child_id = child.id();
+
+    let signal = unsafe {
+        match signal_hook::register(signal_hook::SIGINT, move || {
+            kill(child_id as i32, SIGTERM);
+            sleep(Duration::from_millis(100));
+            for i in (0..50).rev() {
+                let is_dead: i32 = kill(child_id as i32, 0 as i32);
+                if is_dead == 0 {
+                    return;
+                }
+                if i % 10 == 0 && i >= 10 {
+                    info!("Waiting {} more seconds for process to go away", i / 10);
+                }
+
+                sleep(Duration::from_millis(100));
+            }
+            warn!("Killing process!");
+            kill(child_id as i32, SIGKILL);
+        }) {
+            Ok(sig) => sig,
+            Err(_) => {
+                panic!("Unable to register callback for control-c");
+            }
+        }
+    };
+
+    let result = child.wait_with_output();
+
+    signal_hook::unregister(signal);
+
+    return result;
+}
+
+#[cfg(windows)]
+fn spawn_cmd<'a>(
     command: String,
     env: HashMap<String, String>,
     stdout: Stdio,
@@ -137,7 +181,7 @@ fn build_cmd<'a>(
 }
 
 #[cfg(unix)]
-fn build_cmd(
+fn spawn_cmd(
     command: String,
     env: HashMap<String, String>,
     stdout: Stdio,
