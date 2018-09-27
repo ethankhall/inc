@@ -2,6 +2,7 @@ extern crate assert_cli;
 extern crate tempdir;
 
 #[cfg(test)]
+#[cfg(unix)]
 mod root_integration {
     use assert_cli;
 

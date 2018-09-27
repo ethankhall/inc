@@ -4,6 +4,7 @@ extern crate tempdir;
 mod shared;
 
 #[cfg(test)]
+#[cfg(unix)]
 mod checkout_integration {
     use shared::utils::*;
     use std::env::var;
@@ -26,7 +27,6 @@ mod checkout_integration {
     }
 
     #[test]
-    #[cfg(unix)]
     fn checkout_no_args() {
         create_assert()
             .with_args(&["checkout"])
@@ -45,7 +45,6 @@ For more information try --help",
     }
 
     #[test]
-    #[cfg(unix)]
     fn checkout_help() {
         create_assert()
             .with_args(&["checkout", "--help"])
@@ -87,7 +86,6 @@ ARGS:
     }
 
     #[test]
-    #[cfg(unix)]
     fn checkout_list_with_external() {
         use std::fs;
         use std::io::prelude::*;
@@ -118,7 +116,6 @@ ARGS:
     }
 
     #[test]
-    #[cfg(unix)]
     fn checkout_from_service_with_param() {
         with_test_dir(|tmp_dir| {
             let checkout_dir = tmp_dir.clone().join("inc-checkout");
@@ -144,7 +141,6 @@ ARGS:
     }
 
     #[test]
-    #[cfg(unix)]
     fn checkout_from_service() {
         with_test_dir(|tmp_dir| {
             let file_path = tmp_dir.clone().join("inc-checkout-service-foobar");

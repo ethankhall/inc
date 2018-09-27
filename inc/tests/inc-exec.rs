@@ -4,6 +4,7 @@ extern crate tempdir;
 mod shared;
 
 #[cfg(test)]
+#[cfg(unix)]
 mod exec_integration {
     use shared::utils::*;
 
