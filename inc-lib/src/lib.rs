@@ -12,6 +12,7 @@ extern crate dirs;
 #[cfg(unix)]
 extern crate libc;
 extern crate serde_yaml;
+#[cfg(unix)]
 extern crate signal_hook;
 
 #[macro_export]

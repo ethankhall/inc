@@ -148,7 +148,7 @@ fn process_dir_entry(sub_commands: &mut HashSet<SystemBinary>, dir_entry: DirEnt
 }
 
 #[cfg(windows)]
-fn file_is_executable(dir_entry: &DirEntry) -> bool {
+fn file_is_executable(_dir_entry: &DirEntry) -> bool {
     return true;
 }
 
