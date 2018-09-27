@@ -1,6 +1,5 @@
 phases:
   - phase: Windows_Build
-    dependsOn: Linux_Build
     queue: Hosted VS2017
     steps:
       - powershell: |
@@ -52,11 +51,9 @@ phases:
 
   - phase: Mac_Build
     queue: Hosted macOS Preview
-    dependsOn: Linux_Build
     steps:
       - script: |
           curl https://sh.rustup.rs -sSf | sh -s -- --default-toolchain nightly -y
-          
           
       - script: |
           $HOME/.cargo/bin/cargo build --release

@@ -7,8 +7,6 @@ mod shared;
 mod checkout_integration {
     use shared::utils::*;
     use std::env::var;
-    use std::fs;
-    use std::io::prelude::*;
 
     #[test]
     fn checkout_github_repo() {
@@ -89,6 +87,8 @@ ARGS:
     #[test]
     #[cfg(unix)]
     fn checkout_list_with_external() {
+        use std::fs;
+        use std::io::prelude::*;
         use std::os::unix::fs::OpenOptionsExt;
         with_test_dir(|tmp_dir| {
             let file_path = tmp_dir.clone().join("inc-checkout-service-foobar");

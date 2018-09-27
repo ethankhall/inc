@@ -1,5 +1,7 @@
 # inc
 
+[![Build Status](https://ethankhall.visualstudio.com/inc/_apis/build/status/inc-CI)](https://ethankhall.visualstudio.com/inc/_build/latest?definitionId=11)
+
 Inc[luding] your configuration, one step at a time.
 
 ## What
