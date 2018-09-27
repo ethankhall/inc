@@ -127,14 +127,14 @@ fn wait_for_output(child: Child) -> Result<Output, std::io::Error> {
 
 #[cfg(unix)]
 fn wait_for_output(child: Child) -> Result<Output, std::io::Error> {
-    use libc::{kill, SIGKILL, SIGTERM};
+    use libc::{kill, SIGKILL, SIGINT};
     use std::thread::sleep;
     use std::time::Duration;
     let child_id = child.id();
 
     let signal = unsafe {
         match signal_hook::register(signal_hook::SIGINT, move || {
-            kill(child_id as i32, SIGTERM);
+            kill(child_id as i32, SIGINT);
             sleep(Duration::from_millis(100));
             for i in (0..50).rev() {
                 let is_dead: i32 = kill(child_id as i32, 0 as i32);
@@ -149,6 +149,7 @@ fn wait_for_output(child: Child) -> Result<Output, std::io::Error> {
             }
             warn!("Killing process!");
             kill(child_id as i32, SIGKILL);
+            std::process::exit(1);
         }) {
             Ok(sig) => sig,
             Err(_) => {
