@@ -13,6 +13,9 @@ Inc[luding] your configuration, one step at a time.
 
 But these are only examples. `inc` is intended to be flexible enough for teams to describe what they need, to do. A common use-case is to put complicated build logic behind a single command so no new team member needs to remember this project's specific parameters.
 
+## Install
+You can grab the lastest releases from [Github](https://github.com/ethankhall/inc/releases). If you're lazy and just want to run a script do `bash <(curl -s https://raw.githubusercontent.com/ethankhall/inc/master/install.sh)
+
 ## What's Included?
 While `inc` doesn't come with AA batteries, it comes with the the coin-cell to get you going. There are several commands that will come with `inc`. You're free to use one, some, all or none of them. The default commands are:
 - checkout
