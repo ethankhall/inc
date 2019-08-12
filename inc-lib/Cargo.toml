@@ -4,7 +4,7 @@ version = "0.1.6"
 authors = ["Ethan Hall <ethan@ehdev.io>"]
 
 [dependencies]
-log = "0.3"
+log = "0.4"
 clap = "2"
 regex = "0.2"
 url = "1.5.1"
