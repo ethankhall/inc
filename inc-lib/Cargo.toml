@@ -21,5 +21,5 @@ signal-hook = "0.1.5"
 libc = "0.2"
 
 [dev-dependencies]
-assert_cli = "0.5"
+assert_cli = "0.6"
 tempdir = "0.3"
